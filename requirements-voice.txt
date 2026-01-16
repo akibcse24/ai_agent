@@ -1,0 +1,22 @@
+# Voice Mode Dependencies for Crytonix
+# Install with: pip install -r requirements-voice.txt
+
+# Core Voice
+pyttsx3>=2.90               # Fallback TTS engine
+SpeechRecognition>=3.10.0   # Speech recognition
+PyAudio>=0.2.13             # Microphone access
+
+# Enhanced Jervis Mode
+edge-tts>=6.1.0             # Microsoft Edge TTS (free, high quality)
+pygame>=2.5.0               # Audio playback
+numpy>=1.24.0               # Audio processing
+
+# Optional: Wake Word Detection
+# openwakeword>=0.6.0       # Custom wake words (requires onnxruntime)
+
+# Optional: Offline Speech Recognition
+# vosk>=0.3.45              # Offline STT
+
+# Optional: Advanced Voice Activity Detection
+# webrtcvad>=2.0.10         # WebRTC VAD
+# torch>=2.0.0              # For Silero VAD

@@ -1,0 +1,15 @@
+[
+  {
+    "role": "user",
+    "content": [
+      {
+        "type": "text",
+        "text": "hi , what is your name"
+      }
+    ]
+  },
+  {
+    "role": "assistant",
+    "content": "I am Crytonix, a large language model built by Google. In this context, I am acting as the **Manager Agent** of your software development team. I coordinate with my **Planner** and **Coder** agents to help you build and implement technical projects. \n\nHow can I help you today?"
+  }
+]
