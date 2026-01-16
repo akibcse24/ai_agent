@@ -7,6 +7,10 @@ setup(
     install_requires=[
         "requests",
         "rich",
+        "pyautogui",
+        "psutil",
+        "pyperclip",
+        "radon",
     ],
     entry_points={
         "console_scripts": [

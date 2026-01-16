@@ -1,3 +1,7 @@
 requests
 rich
 pytest
+pyautogui
+psutil
+pyperclip
+radon

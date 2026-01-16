@@ -7,6 +7,7 @@ import csv
 import zipfile
 import platform
 import socket
+import webbrowser
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -150,6 +151,118 @@ class Toolbox:
         console.print(Panel(syntax, title=f"Preview: {filename}", border_style="yellow"))
 
 
+class DesktopToolbox:
+    """Tools for desktop interaction and automation."""
+
+    @staticmethod
+    def open_app(app_name: str) -> str:
+        """Launches an application."""
+        system = platform.system()
+        try:
+            if system == "Darwin":  # macOS
+                subprocess.Popen(["open", "-a", app_name])
+            elif system == "Windows":
+                subprocess.Popen(["start", app_name], shell=True)
+            else:  # Linux
+                subprocess.Popen([app_name], shell=True)
+            return f"Launched application: {app_name}"
+        except Exception as e:
+            return f"Error launching app: {e}"
+
+    @staticmethod
+    def control_media(action: str) -> str:
+        """Controls media playback (playpause, volumeup, volumedown, next, prev)."""
+        try:
+            import pyautogui
+            valid_actions = ["playpause", "volumeup", "volumedown", "nexttrack", "prevtrack", "mute"]
+            if action not in valid_actions:
+                return f"Invalid action. Choose from: {', '.join(valid_actions)}"
+
+            pyautogui.press(action)
+            return f"Media action executed: {action}"
+        except ImportError:
+            return "Error: pyautogui not installed."
+        except Exception as e:
+            return f"Error controlling media: {e}"
+
+    @staticmethod
+    def set_volume(level: int) -> str:
+        """Sets system volume (0-100). Note: Platform specific implementation."""
+        system = platform.system()
+        try:
+            if system == "Darwin":
+                subprocess.run(f"osascript -e 'set volume output volume {level}'", shell=True)
+            elif system == "Linux":
+                # Assuming amixer/alsa
+                subprocess.run(f"amixer -D pulse sset Master {level}%", shell=True)
+            elif system == "Windows":
+                # Windows volume setting is complex via command line without extra tools like nircmd
+                return "Volume setting on Windows requires 'nircmd' or external tools."
+            return f"Volume set to {level}%"
+        except Exception as e:
+            return f"Error setting volume: {e}"
+
+    @staticmethod
+    def browser_open(url: str) -> str:
+        """Opens a URL in the default web browser."""
+        try:
+            webbrowser.open(url)
+            return f"Opened URL: {url}"
+        except Exception as e:
+            return f"Error opening browser: {e}"
+
+    @staticmethod
+    def clipboard_action(action: str, text: str = "") -> str:
+        """Interacts with the clipboard (copy/paste)."""
+        try:
+            import pyperclip
+            if action == "copy":
+                pyperclip.copy(text)
+                return "Text copied to clipboard."
+            elif action == "paste":
+                content = pyperclip.paste()
+                return f"Clipboard content:\n{content}"
+            else:
+                return "Invalid action. Use 'copy' or 'paste'."
+        except ImportError:
+            return "Error: pyperclip not installed."
+        except Exception as e:
+            return f"Clipboard error: {e}"
+
+
+class AutomationToolbox:
+    """Tools for keyboard/mouse automation and screenshots."""
+
+    @staticmethod
+    def type_text(text: str, interval: float = 0.0) -> str:
+        """Simulates typing text."""
+        try:
+            import pyautogui
+            pyautogui.write(text, interval=interval)
+            return "Text typed successfully."
+        except ImportError:
+            return "Error: pyautogui not installed."
+        except Exception as e:
+            if "DISPLAY" in str(e) or "application is not allowed" in str(e):
+                return "Error: Unable to type text (Headless environment detected?)"
+            return f"Error typing text: {e}"
+
+    @staticmethod
+    def take_screenshot(filename: str = "screenshot.png") -> str:
+        """Captures the screen and saves to a file."""
+        try:
+            import pyautogui
+            screenshot = pyautogui.screenshot()
+            screenshot.save(filename)
+            return f"Screenshot saved to {filename}"
+        except ImportError:
+            return "Error: pyautogui not installed."
+        except Exception as e:
+            if "DISPLAY" in str(e):
+                return "Error: Unable to take screenshot (Headless environment detected?)"
+            return f"Error taking screenshot: {e}"
+
+
 class FileToolbox:
     """Tools for file manipulation (zip, csv)."""
 
@@ -157,10 +270,15 @@ class FileToolbox:
     def zip_files(source_dir: str, output_zip: str) -> str:
         """Compress a directory into a zip file."""
         try:
+            output_zip_abs = os.path.abspath(output_zip)
             with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
                 for root, _, files in os.walk(source_dir):
                     for file in files:
                         file_path = os.path.join(root, file)
+                        # Prevent recursive zipping of the output file itself
+                        if os.path.abspath(file_path) == output_zip_abs:
+                            continue
+
                         # Add relative path to archive
                         arcname = os.path.relpath(file_path, source_dir)
                         zipf.write(file_path, arcname)
@@ -2594,7 +2712,7 @@ class DependencyToolbox:
                 with open(path, 'r') as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#') and '=' in line:
+                        if line and not line.startswith('#'):
                             # Parse package==version or package>=version etc.
                             match = re.match(r'([a-zA-Z0-9_-]+)([<>=!]+)?(.+)?', line)
                             if match:

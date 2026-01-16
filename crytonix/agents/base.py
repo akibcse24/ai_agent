@@ -6,7 +6,8 @@ import re
 from crytonix.llm.client import LLMClient
 from crytonix.tools import (Toolbox, GitHubToolbox, WebToolbox, ProductToolbox, DesignToolbox,
                              CodeAnalysisToolbox, TestingToolbox, DatabaseToolbox, DevOpsToolbox,
-                             DocumentationToolbox, SecurityToolbox, MemoryToolbox, AssetToolbox, ScaffoldToolbox)
+                             DocumentationToolbox, SecurityToolbox, MemoryToolbox, AssetToolbox, ScaffoldToolbox,
+                             DesktopToolbox, AutomationToolbox, FileToolbox, SystemToolbox)
 from crytonix.llm.token_tracker import TokenTracker
 
 class BaseAgent(ABC):
@@ -206,6 +207,46 @@ class BaseAgent(ABC):
                                      executed_any = True
                                 except Exception as e:
                                      tool_output.append(f"Error executing Scaffold tool '{tool_name}': {e}")
+
+                            # Desktop Toolbox
+                            elif hasattr(DesktopToolbox, tool_name):
+                                method = getattr(DesktopToolbox, tool_name)
+                                try:
+                                     result = method(**args) if isinstance(args, dict) else method(args)
+                                     tool_output.append(f"Desktop Tool '{tool_name}' output:\n{result}")
+                                     executed_any = True
+                                except Exception as e:
+                                     tool_output.append(f"Error executing Desktop tool '{tool_name}': {e}")
+
+                            # Automation Toolbox
+                            elif hasattr(AutomationToolbox, tool_name):
+                                method = getattr(AutomationToolbox, tool_name)
+                                try:
+                                     result = method(**args) if isinstance(args, dict) else method(args)
+                                     tool_output.append(f"Automation Tool '{tool_name}' output:\n{result}")
+                                     executed_any = True
+                                except Exception as e:
+                                     tool_output.append(f"Error executing Automation tool '{tool_name}': {e}")
+
+                            # File Toolbox
+                            elif hasattr(FileToolbox, tool_name):
+                                method = getattr(FileToolbox, tool_name)
+                                try:
+                                     result = method(**args) if isinstance(args, dict) else method(args)
+                                     tool_output.append(f"File Tool '{tool_name}' output:\n{result}")
+                                     executed_any = True
+                                except Exception as e:
+                                     tool_output.append(f"Error executing File tool '{tool_name}': {e}")
+
+                            # System Toolbox
+                            elif hasattr(SystemToolbox, tool_name):
+                                method = getattr(SystemToolbox, tool_name)
+                                try:
+                                     result = method(**args) if isinstance(args, dict) else method(args)
+                                     tool_output.append(f"System Tool '{tool_name}' output:\n{result}")
+                                     executed_any = True
+                                except Exception as e:
+                                     tool_output.append(f"Error executing System tool '{tool_name}': {e}")
 
                             else:
                                 tool_output.append(f"Error: Tool '{tool_name}' not found.")
