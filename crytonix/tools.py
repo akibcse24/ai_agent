@@ -3,6 +3,10 @@ import subprocess
 import glob
 import re
 import json
+import csv
+import zipfile
+import platform
+import socket
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -144,6 +148,99 @@ class Toolbox:
 
         syntax = Syntax(diff_text, "diff", theme="monokai", line_numbers=False)
         console.print(Panel(syntax, title=f"Preview: {filename}", border_style="yellow"))
+
+
+class FileToolbox:
+    """Tools for file manipulation (zip, csv)."""
+
+    @staticmethod
+    def zip_files(source_dir: str, output_zip: str) -> str:
+        """Compress a directory into a zip file."""
+        try:
+            with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for root, _, files in os.walk(source_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        # Add relative path to archive
+                        arcname = os.path.relpath(file_path, source_dir)
+                        zipf.write(file_path, arcname)
+            return f"Successfully created zip archive: {output_zip}"
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, output_dir: str) -> str:
+        """Extract a zip archive."""
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                zipf.extractall(output_dir)
+            return f"Successfully extracted {zip_path} to {output_dir}"
+        except Exception as e:
+            return f"Error unzipping: {e}"
+
+    @staticmethod
+    def read_csv(path: str, delimiter: str = ",") -> str:
+        """Read a CSV file into a list of dicts."""
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f, delimiter=delimiter)
+                data = list(reader)
+            # Return JSON for easier consumption by LLM
+            return json.dumps(data, indent=2)
+        except Exception as e:
+            return f"Error reading CSV: {e}"
+
+    @staticmethod
+    def write_csv(path: str, data: List[Dict]) -> str:
+        """Write a list of dicts to a CSV file."""
+        if not data:
+            return "Error: No data to write."
+        try:
+            keys = data[0].keys()
+            with open(path, 'w', encoding='utf-8', newline='') as f:
+                writer = csv.DictWriter(f, fieldnames=keys)
+                writer.writeheader()
+                writer.writerows(data)
+            return f"Successfully wrote CSV to {path}"
+        except Exception as e:
+            return f"Error writing CSV: {e}"
+
+
+class SystemToolbox:
+    """Tools for system info and networking."""
+
+    @staticmethod
+    def get_system_info() -> str:
+        """Get system details (OS, CPU)."""
+        try:
+            uname = platform.uname()
+            info = {
+                "system": uname.system,
+                "node": uname.node,
+                "release": uname.release,
+                "version": uname.version,
+                "machine": uname.machine,
+                "processor": uname.processor,
+                "cpu_count": os.cpu_count()
+            }
+            return json.dumps(info, indent=2)
+        except Exception as e:
+            return f"Error getting system info: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int) -> str:
+        """Check if a TCP port is open."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(1)
+                result = s.connect_ex((host, port))
+                if result == 0:
+                    return f"Port {port} on {host} is OPEN."
+                else:
+                    return f"Port {port} on {host} is CLOSED (code: {result})."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
 
 class GitHubToolbox:
     @staticmethod
@@ -2497,7 +2594,7 @@ class DependencyToolbox:
                 with open(path, 'r') as f:
                     for line in f:
                         line = line.strip()
-                        if line and not line.startswith('#'):
+                        if line and not line.startswith('#') and '=' in line:
                             # Parse package==version or package>=version etc.
                             match = re.match(r'([a-zA-Z0-9_-]+)([<>=!]+)?(.+)?', line)
                             if match:
