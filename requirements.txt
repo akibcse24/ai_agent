@@ -5,3 +5,5 @@ pyautogui
 psutil
 pyperclip
 radon
+customtkinter
+packaging

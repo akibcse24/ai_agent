@@ -79,8 +79,20 @@ def main():
     parser.add_argument("--voice-persona", choices=["jarvis", "friday", "british", "aussie"], default="jarvis", help="Voice persona for TTS")
     parser.add_argument("--tdd", action="store_true", help="Enforce Test-Driven Development workflow")
     parser.add_argument("--dashboard", action="store_true", help="Launch Project Health Dashboard")
+    parser.add_argument("--gui", action="store_true", help="Launch Professional GUI Mode")
     
     args = parser.parse_args()
+
+    # Handle GUI
+    if args.gui:
+        try:
+            from crytonix.gui.app import CrytonixApp
+            app = CrytonixApp()
+            app.mainloop()
+            sys.exit(0)
+        except Exception as e:
+            console.print(f"[bold red]GUI Error:[/bold red] {e}")
+            sys.exit(1)
 
     # Handle Dashboard
     if args.dashboard:
