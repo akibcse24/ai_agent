@@ -77,8 +77,15 @@ def main():
     parser.add_argument("--jervis", action="store_true", help="Enable full Jervis Mode (wake word 'Hey Crytonix', continuous conversation)")
     parser.add_argument("--voice-persona", choices=["jarvis", "friday", "british", "aussie"], default="jarvis", help="Voice persona for TTS")
     parser.add_argument("--tdd", action="store_true", help="Enforce Test-Driven Development workflow")
+    parser.add_argument("--dashboard", action="store_true", help="Launch the Project Health Dashboard")
     
     args = parser.parse_args()
+
+    # Handle Dashboard
+    if args.dashboard:
+        from crytonix.dashboard import run_dashboard
+        run_dashboard()
+        sys.exit(0)
 
     # Handle List Sessions
     if args.list_sessions:
