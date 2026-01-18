@@ -3,6 +3,12 @@ import subprocess
 import glob
 import re
 import json
+import csv
+import zipfile
+import platform
+import shutil
+import socket
+import datetime
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -2585,3 +2591,215 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class SystemToolbox:
+    """Tools for system information and process management."""
+
+    @staticmethod
+    def get_system_info() -> str:
+        """Returns detailed system information."""
+        try:
+            info = {
+                "System": platform.system(),
+                "Node Name": platform.node(),
+                "Release": platform.release(),
+                "Version": platform.version(),
+                "Machine": platform.machine(),
+                "Processor": platform.processor(),
+                "Architecture": platform.architecture(),
+            }
+            return "\n".join([f"{k}: {v}" for k, v in info.items()])
+        except Exception as e:
+            return f"Error retrieving system info: {e}"
+
+    @staticmethod
+    def get_resource_usage() -> str:
+        """Returns current CPU, Memory, and Disk usage."""
+        try:
+            import psutil
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            disk = psutil.disk_usage('/')
+
+            return (
+                f"CPU Usage: {cpu_percent}%\n"
+                f"Memory Usage: {memory.percent}% (Used: {memory.used // (1024**2)}MB / Total: {memory.total // (1024**2)}MB)\n"
+                f"Disk Usage: {disk.percent}% (Used: {disk.used // (1024**3)}GB / Total: {disk.total // (1024**3)}GB)"
+            )
+        except ImportError:
+            return "Error: psutil not installed."
+        except Exception as e:
+            return f"Error retrieving resource usage: {e}"
+
+    @staticmethod
+    def list_processes(limit: int = 10, sort_by: str = 'memory') -> str:
+        """Lists top running processes sorted by 'memory' or 'cpu'."""
+        try:
+            import psutil
+            procs = []
+            for p in psutil.process_iter(['pid', 'name', 'username', 'memory_percent', 'cpu_percent']):
+                try:
+                    procs.append(p.info)
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+
+            key = 'memory_percent' if sort_by == 'memory' else 'cpu_percent'
+            procs.sort(key=lambda x: x.get(key, 0), reverse=True)
+
+            result = [f"Top {limit} Processes by {sort_by.upper()}:", "PID | Name | User | CPU% | MEM%"]
+            result.append("-" * 50)
+
+            for p in procs[:limit]:
+                 result.append(f"{p['pid']} | {p['name']} | {p['username']} | {p['cpu_percent']:.1f}% | {p['memory_percent']:.1f}%")
+
+            return "\n".join(result)
+        except ImportError:
+            return "Error: psutil not installed."
+        except Exception as e:
+            return f"Error listing processes: {e}"
+
+    @staticmethod
+    def kill_process(pid: int) -> str:
+        """Terminates a process by PID."""
+        try:
+            import psutil
+            p = psutil.Process(pid)
+            p.terminate()
+            p.wait(timeout=3)
+            return f"Process {pid} ({p.name()}) terminated successfully."
+        except psutil.NoSuchProcess:
+            return f"Error: Process {pid} does not exist."
+        except psutil.AccessDenied:
+            return f"Error: Permission denied to kill process {pid}."
+        except ImportError:
+             return "Error: psutil not installed."
+        except Exception as e:
+            return f"Error killing process: {e}"
+
+
+class FileToolbox:
+    """Tools for advanced file operations like CSV and Zip."""
+
+    @staticmethod
+    def read_csv(path: str, limit: int = 10) -> str:
+        """Reads a CSV file and returns the first N rows."""
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                rows = list(reader)
+
+            header = rows[0] if rows else []
+            data = rows[1:limit+1]
+
+            result = [f"CSV: {path} (Total rows: {len(rows)})", f"Columns: {', '.join(header)}", ""]
+            for row in data:
+                result.append(str(row))
+
+            if len(rows) > limit:
+                result.append(f"... ({len(rows) - limit} more rows)")
+
+            return "\n".join(result)
+        except Exception as e:
+            return f"Error reading CSV: {e}"
+
+    @staticmethod
+    def write_csv(path: str, data: List[List[str]], mode: str = 'w') -> str:
+        """Writes data to a CSV file."""
+        try:
+            with open(path, mode, newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerows(data)
+            return f"Successfully wrote {len(data)} rows to {path}"
+        except Exception as e:
+            return f"Error writing CSV: {e}"
+
+    @staticmethod
+    def zip_files(source_path: str, output_path: str) -> str:
+        """Zips a file or directory."""
+        try:
+            with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                if os.path.isdir(source_path):
+                    for root, _, files in os.walk(source_path):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            arcname = os.path.relpath(file_path, source_path)
+                            zipf.write(file_path, arcname)
+                else:
+                    zipf.write(source_path, os.path.basename(source_path))
+            return f"Successfully created archive: {output_path}"
+        except Exception as e:
+            return f"Error zipping files: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str) -> str:
+        """Extracts a zip archive."""
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                zipf.extractall(extract_to)
+            return f"Successfully extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
+
+    @staticmethod
+    def get_file_info(path: str) -> str:
+        """Returns metadata about a file."""
+        try:
+            stat = os.stat(path)
+            dt_created = datetime.datetime.fromtimestamp(stat.st_ctime)
+            dt_modified = datetime.datetime.fromtimestamp(stat.st_mtime)
+
+            return (
+                f"File: {path}\n"
+                f"Size: {stat.st_size} bytes\n"
+                f"Created: {dt_created}\n"
+                f"Modified: {dt_modified}\n"
+                f"Permissions: {oct(stat.st_mode)[-3:]}"
+            )
+        except Exception as e:
+            return f"Error getting file info: {e}"
+
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def get_local_ip() -> str:
+        """Returns the local IP address."""
+        try:
+            hostname = socket.gethostname()
+            return socket.gethostbyname(hostname)
+        except Exception as e:
+            return f"Error getting local IP: {e}"
+
+    @staticmethod
+    def get_public_ip() -> str:
+        """Returns the public IP address."""
+        try:
+            import requests
+            return requests.get('https://api.ipify.org', timeout=5).text
+        except ImportError:
+             return "Error: requests not installed."
+        except Exception as e:
+            return f"Error getting public IP: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int) -> str:
+        """Checks if a port is open on a host."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(2)
+                result = s.connect_ex((host, port))
+                if result == 0:
+                    return f"Port {port} on {host} is OPEN"
+                else:
+                    return f"Port {port} on {host} is CLOSED"
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Performs a DNS lookup."""
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup for {domain}: {ip}"
+        except Exception as e:
+            return f"Error resolving domain: {e}"
