@@ -2585,3 +2585,134 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class SystemToolbox:
+    """Tools for system monitoring and information."""
+
+    @staticmethod
+    def get_system_info() -> str:
+        """Returns basic system information."""
+        import platform
+        import psutil
+
+        try:
+            info = {
+                "OS": platform.system(),
+                "Release": platform.release(),
+                "Version": platform.version(),
+                "Machine": platform.machine(),
+                "Processor": platform.processor(),
+                "Python": platform.python_version(),
+                "CPU Count": psutil.cpu_count(logical=True),
+                "Memory Total": f"{psutil.virtual_memory().total / (1024**3):.2f} GB"
+            }
+            return "\n".join([f"{k}: {v}" for k, v in info.items()])
+        except Exception as e:
+            return f"Error getting system info: {e}"
+
+    @staticmethod
+    def get_resource_usage() -> str:
+        """Returns current CPU and Memory usage."""
+        import psutil
+        try:
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            return (f"CPU Usage: {cpu_percent}%\n"
+                    f"Memory Usage: {memory.percent}% "
+                    f"({memory.used / (1024**3):.2f}GB / {memory.total / (1024**3):.2f}GB)")
+        except Exception as e:
+            return f"Error getting resource usage: {e}"
+
+    @staticmethod
+    def list_processes(search: str = "") -> str:
+        """Lists running processes, optionally filtered by name."""
+        import psutil
+        try:
+            procs = []
+            for proc in psutil.process_iter(['pid', 'name', 'username']):
+                try:
+                    if search.lower() in proc.info['name'].lower():
+                        procs.append(proc.info)
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                    pass
+
+            # Limit output
+            output = ["PID | Name | User"]
+            for p in procs[:50]: # Limit to 50
+                output.append(f"{p['pid']} | {p['name']} | {p.get('username', '?')}")
+
+            if len(procs) > 50:
+                output.append(f"... and {len(procs) - 50} more")
+
+            return "\n".join(output) if len(output) > 1 else "No matching processes found."
+        except Exception as e:
+            return f"Error listing processes: {e}"
+
+
+class FileToolbox:
+    """Tools for advanced file operations (CSV, Zip, JSON)."""
+
+    @staticmethod
+    def read_csv(path: str) -> str:
+        """Reads a CSV file and returns content as JSON-like string."""
+        import csv
+        try:
+            with open(path, 'r', newline='', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+                return json.dumps(rows, indent=2)
+        except Exception as e:
+            return f"Error reading CSV: {e}"
+
+    @staticmethod
+    def write_csv(path: str, data_json: str) -> str:
+        """Writes JSON string data to a CSV file."""
+        import csv
+        try:
+            data = json.loads(data_json)
+            if not isinstance(data, list) or not data:
+                return "Error: Data must be a non-empty list of objects."
+
+            # Collect all keys from all objects
+            keys = set()
+            for item in data:
+                keys.update(item.keys())
+            fieldnames = sorted(list(keys))
+
+            with open(path, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(data)
+            return f"Successfully wrote {len(data)} rows to {path}"
+        except Exception as e:
+            return f"Error writing CSV: {e}"
+
+    @staticmethod
+    def zip_files(zip_path: str, file_paths: List[str]) -> str:
+        """Creates a zip archive from a list of files."""
+        import zipfile
+        warnings = []
+        try:
+            with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in file_paths:
+                    if os.path.exists(file):
+                        zipf.write(file, os.path.basename(file))
+                    else:
+                        warnings.append(f"Warning: {file} not found, skipping.")
+
+            result = f"Created zip archive: {zip_path}"
+            if warnings:
+                result += "\n" + "\n".join(warnings)
+            return result
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str) -> str:
+        """Extracts a zip archive."""
+        import zipfile
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                zipf.extractall(extract_to)
+            return f"Extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
