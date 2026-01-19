@@ -3,6 +3,7 @@ import subprocess
 import glob
 import re
 import json
+import random
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -2585,3 +2586,32 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Returns a posture check reminder and tip."""
+        tips = [
+            "Sit back in your chair and make sure your lower back is supported.",
+            "Keep your feet flat on the floor or on a footrest.",
+            "Position your monitor at eye level to avoid neck strain.",
+            "Relax your shoulders; they shouldn't be up by your ears!",
+            "Keep your wrists straight and hovering above the keyboard.",
+            "Take a deep breath and reset your spine alignment."
+        ]
+        return f"🧘 Posture Check: {random.choice(tips)}"
+
+    @staticmethod
+    def stretch_exercise() -> str:
+        """Returns a random desk-friendly stretch exercise."""
+        exercises = [
+            "Neck Roll: Gently roll your head in a circle, 5 times each direction.",
+            "Shoulder Shrug: Lift shoulders to ears, hold for 3s, release. Repeat 10x.",
+            "Wrist Flex: Extend arm, pull fingers back gently with other hand. Hold 15s.",
+            "Seated Spinal Twist: Turn torso to one side, holding chair back. Hold 15s/side.",
+            "Eye Rest: Look away from screen at something 20ft away for 20s (20-20-20 rule).",
+            "Hamstring Stretch: Extend one leg while seated, lean forward slightly. Hold 10s."
+        ]
+        return f"🤸 Stretch Time: {random.choice(exercises)}"
