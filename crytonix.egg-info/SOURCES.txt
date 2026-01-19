@@ -8,5 +8,7 @@ crytonix.egg-info/requires.txt
 crytonix.egg-info/top_level.txt
 tests/test_coding_agent_mock.py
 tests/test_features_mock.py
+tests/test_health_toolbox.py
 tests/test_llm_mock.py
 tests/test_manager_mock.py
+tests/test_tools_manual.py
