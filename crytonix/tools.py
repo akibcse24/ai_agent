@@ -2585,3 +2585,32 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds the user to check their posture."""
+        return "🧘 Posture Check! Sit up straight, shoulders back, feet flat on the floor."
+
+    @staticmethod
+    def stretch_exercise() -> str:
+        """Suggests a stretching exercise."""
+        import random
+        exercises = [
+            "Neck Roll: Gently roll your neck in a circle.",
+            "Shoulder Shrug: Shrug your shoulders up to your ears and hold for 5 seconds.",
+            "Wrist Stretch: Extend your arm with palm facing up and gently pull your fingers back.",
+            "Torso Twist: Turn your upper body to the right, then to the left."
+        ]
+        return f"🤸 Stretch Time: {random.choice(exercises)}"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds the user to drink water."""
+        return "💧 Hydration Check! Time to drink a glass of water."
+
+    @staticmethod
+    def take_break(duration_minutes: int = 5) -> str:
+        """Suggests taking a break."""
+        return f"🛑 Time for a break! Step away from the screen for {duration_minutes} minutes."
