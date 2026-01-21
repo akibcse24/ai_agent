@@ -2585,3 +2585,83 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class HealthToolbox:
+    """Tools for developer wellness and health."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Returns a reminder to check posture."""
+        return "🧘 Posture Check: Sit up straight, shoulders back, feet flat on the floor."
+
+    @staticmethod
+    def stretch_exercise() -> str:
+        """Returns a random stretch exercise."""
+        import random
+        stretches = [
+            "Neck Roll: Gently roll your neck in a circle.",
+            "Shoulder Shrug: Shrug shoulders up to ears and release.",
+            "Wrist Flex: Extend arm, pull fingers back gently.",
+            "Spinal Twist: Turn your upper body to the left, then right.",
+            "Eye Rest: Look at something 20 feet away for 20 seconds."
+        ]
+        return f"🤸 Stretch Break: {random.choice(stretches)}"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Returns a reminder to drink water."""
+        return "💧 Hydration Check: Have you drunk water recently? Stay hydrated!"
+
+    @staticmethod
+    def take_break(duration_mins: int = 5) -> str:
+        """Returns a break reminder."""
+        return f"☕ Time for a break! Step away from the screen for {duration_mins} minutes."
+
+
+class NetworkToolbox:
+    """Tools for basic network diagnostics."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host."""
+        import platform
+        import subprocess
+
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, str(count), host]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return f"Ping results for {host}:\n{result.stdout}"
+        except subprocess.CalledProcessError as e:
+            return f"Ping failed: {e.stderr}"
+        except Exception as e:
+            return f"Error pinging {host}: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int, timeout: int = 3) -> str:
+        """Checks if a TCP port is open."""
+        import socket
+
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(timeout)
+                result = sock.connect_ex((host, port))
+                if result == 0:
+                    return f"✅ Port {port} on {host} is OPEN."
+                else:
+                    return f"❌ Port {port} on {host} is CLOSED (Code: {result})."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Resolves a domain name to an IP address."""
+        import socket
+        try:
+            ip_address = socket.gethostbyname(domain)
+            return f"DNS Lookup: {domain} -> {ip_address}"
+        except socket.gaierror:
+            return f"Error: Could not resolve domain {domain}"
+        except Exception as e:
+            return f"Error during DNS lookup: {e}"
