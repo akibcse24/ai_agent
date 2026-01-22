@@ -2585,3 +2585,82 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds the user to check their posture."""
+        return "🧘 check_posture: Sit up straight! Shoulders back, feet flat on the floor. Your future self will thank you."
+
+    @staticmethod
+    def stretch_exercise() -> str:
+        """Suggests a quick stretching exercise."""
+        import random
+        stretches = [
+            "Neck Roll: Gently roll your head in a circle.",
+            "Shoulder Shrug: Lift shoulders to ears, hold, drop.",
+            "Wrist Flex: Extend arm, pull fingers back gently.",
+            "Spinal Twist: Turn your torso to the left, then right.",
+            "Hamstring Stretch: Reach for your toes (carefully!)."
+        ]
+        return f"🤸 stretch_exercise: {random.choice(stretches)}"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds the user to drink water."""
+        return "💧 hydration_reminder: Time to hydrate! Grab a glass of water."
+
+    @staticmethod
+    def take_break(duration_minutes: int = 5) -> str:
+        """Suggests taking a break."""
+        return f"☕ take_break: You've been working hard. Take a {duration_minutes}-minute break to rest your eyes and mind."
+
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host."""
+        import platform
+        import subprocess
+
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, str(count), host]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True, shell=False)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            return f"Ping failed: {e.stderr}"
+        except Exception as e:
+            return f"Error pinging {host}: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int, timeout: int = 3) -> str:
+        """Checks if a TCP port is open."""
+        import socket
+
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.settimeout(timeout)
+                result = sock.connect_ex((host, port))
+                if result == 0:
+                    return f"✅ Port {port} on {host} is OPEN."
+                else:
+                    return f"❌ Port {port} on {host} is CLOSED (Code: {result})."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(host: str) -> str:
+        """Performs a DNS lookup."""
+        import socket
+
+        try:
+            ip = socket.gethostbyname(host)
+            return f"🌐 DNS Lookup: {host} -> {ip}"
+        except Exception as e:
+            return f"Error resolving {host}: {e}"
