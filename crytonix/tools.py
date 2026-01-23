@@ -3,6 +3,8 @@ import subprocess
 import glob
 import re
 import json
+import socket
+import random
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -2585,3 +2587,101 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds the user to check their posture."""
+        tips = [
+            "Sit up straight with your shoulders back.",
+            "Keep your feet flat on the floor.",
+            "Ensure your screen is at eye level.",
+            "Relax your shoulders and uncross your legs.",
+            "Take a deep breath and reset your posture."
+        ]
+        return f"🧘 Posture Check: {random.choice(tips)}"
+
+    @staticmethod
+    def stretch_exercise() -> str:
+        """Suggests a quick stretching exercise."""
+        stretches = [
+            "Neck Roll: Gently roll your head in a circle, 5 times each direction.",
+            "Shoulder Shrug: Shrug your shoulders up to your ears, hold for 3 seconds, release.",
+            "Wrist Flex: Extend your arm, palm up, and gently pull fingers back with other hand.",
+            "Spinal Twist: Sit tall, turn torso to one side holding the chair back, hold for 10s.",
+            "Eye Roll: Look up, right, down, left in a circle to relax eye muscles."
+        ]
+        return f"🤸 Stretch Time: {random.choice(stretches)}"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds the user to drink water."""
+        msgs = [
+            "Time for a sip! Stay hydrated.",
+            "Water is fuel. Drink up!",
+            "Have you had water in the last hour? Take a break.",
+            "Hydration check! 💧",
+            "Your brain needs water to code. 🥤"
+        ]
+        return f"💧 {random.choice(msgs)}"
+
+    @staticmethod
+    def take_break() -> str:
+        """Suggests a break activity."""
+        ideas = [
+            "Walk away from the screen for 5 minutes.",
+            "Look at something 20 feet away for 20 seconds.",
+            "Do 10 jumping jacks.",
+            "Close your eyes and breathe deeply for 1 minute.",
+            "Grab a healthy snack."
+        ]
+        return f"☕ Break Time: {random.choice(ideas)}"
+
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host to check connectivity."""
+        # Validate host to prevent injection (basic check)
+        if not re.match(r'^[a-zA-Z0-9.-]+$', host):
+            return "Error: Invalid host format."
+
+        # Determine ping command based on OS (Windows uses -n, others -c)
+        param = '-n' if os.name == 'nt' else '-c'
+
+        command = ['ping', param, str(count), host]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, shell=False)
+            if result.returncode == 0:
+                return f"Ping success:\n{result.stdout}"
+            else:
+                return f"Ping failed:\n{result.stderr or result.stdout}"
+        except Exception as e:
+            return f"Error executing ping: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int, timeout: int = 3) -> str:
+        """Checks if a specific port is open on a host."""
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(timeout)
+                result = s.connect_ex((host, port))
+                if result == 0:
+                    return f"✅ Port {port} on {host} is OPEN."
+                else:
+                    return f"❌ Port {port} on {host} is CLOSED (Code: {result})."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Resolves a domain name to an IP address."""
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup: {domain} -> {ip}"
+        except Exception as e:
+            return f"Error resolving domain: {e}"
