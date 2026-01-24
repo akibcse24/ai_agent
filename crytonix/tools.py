@@ -1,6 +1,8 @@
 import os
 import subprocess
 import glob
+import random
+import socket
 import re
 import json
 from typing import List, Dict, Any, Optional
@@ -2585,3 +2587,98 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Returns a reminder to check posture."""
+        reminders = [
+            "Straighten your back!",
+            "Relax your shoulders.",
+            "Uncross your legs.",
+            "Adjust your screen to eye level.",
+            "Take a deep breath and reset your posture."
+        ]
+        return f"🧘 Posture Check: {random.choice(reminders)}"
+
+    @staticmethod
+    def stretch_exercise() -> str:
+        """Returns a random stretch exercise."""
+        stretches = [
+            "Neck Roll: Gently roll your head in a circle.",
+            "Shoulder Shrugs: Lift shoulders to ears, hold, and release.",
+            "Wrist Flex: Extend arm, pull fingers back gently.",
+            "Hamstring Stretch: Touch your toes (or try to!).",
+            "Torso Twist: Turn your upper body to the left, then right."
+        ]
+        return f"🤸 Stretch Time: {random.choice(stretches)}"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Returns a reminder to drink water."""
+        msgs = [
+            "💧 Time for a sip of water!",
+            "Stay hydrated! Your brain needs it.",
+            "Empty your glass and refill it.",
+            "Water break! 🚰"
+        ]
+        return random.choice(msgs)
+
+    @staticmethod
+    def take_break(duration: str = "5 minutes") -> str:
+        """Suggests a break activity."""
+        activities = [
+            "Walk around the room.",
+            "Look out a window at something distant (20-20-20 rule).",
+            "Close your eyes and meditate.",
+            "Do some jumping jacks.",
+            "Make a cup of tea/coffee."
+        ]
+        return f"☕ Take a {duration} break: {random.choice(activities)}"
+
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str) -> str:
+        """Pings a host."""
+        # Use subprocess to ping. Platform specific.
+        param = '-n' if os.name == 'nt' else '-c'
+        command = ['ping', param, '4', host]
+
+        try:
+            # shell=False for security (list args)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+            if result.returncode == 0:
+                return f"✅ Ping {host} successful:\n{result.stdout}"
+            else:
+                return f"❌ Ping {host} failed:\n{result.stderr or result.stdout}"
+        except Exception as e:
+            return f"Error pinging {host}: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int) -> str:
+        """Checks if a TCP port is open."""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(3)
+        try:
+            result = sock.connect_ex((host, int(port)))
+            if result == 0:
+                return f"✅ Port {port} on {host} is OPEN."
+            else:
+                return f"❌ Port {port} on {host} is CLOSED (Code: {result})."
+        except Exception as e:
+            return f"Error checking port {host}:{port}: {e}"
+        finally:
+            sock.close()
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Resolves a domain name to IP."""
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"🌐 DNS Lookup: {domain} -> {ip}"
+        except Exception as e:
+            return f"Error resolving {domain}: {e}"
