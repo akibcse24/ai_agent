@@ -3,6 +3,11 @@ import subprocess
 import glob
 import re
 import json
+import zipfile
+import tarfile
+import hashlib
+import base64
+import uuid
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -2585,3 +2590,117 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class ArchiveToolbox:
+    """Tools for file archiving and compression."""
+
+    @staticmethod
+    def zip_files(files: List[str], output_filename: str) -> str:
+        """Creates a zip archive from a list of files."""
+        try:
+            with zipfile.ZipFile(output_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in files:
+                    if os.path.exists(file):
+                        zipf.write(file, os.path.basename(file))
+                    else:
+                        return f"Error: File '{file}' not found."
+            return f"Successfully created {output_filename}"
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str) -> str:
+        """Extracts a zip archive."""
+        try:
+            if not os.path.exists(zip_path):
+                return f"Error: Zip file '{zip_path}' not found."
+
+            os.makedirs(extract_to, exist_ok=True)
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                zipf.extractall(extract_to)
+            return f"Successfully extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
+
+    @staticmethod
+    def create_tarball(files: List[str], output_filename: str, compression: str = "gz") -> str:
+        """Creates a tarball (supports gz, bz2, xz)."""
+        try:
+            mode = f"w:{compression}"
+            with tarfile.open(output_filename, mode) as tar:
+                for file in files:
+                    if os.path.exists(file):
+                        tar.add(file, arcname=os.path.basename(file))
+                    else:
+                        return f"Error: File '{file}' not found."
+            return f"Successfully created {output_filename}"
+        except Exception as e:
+            return f"Error creating tarball: {e}"
+
+    @staticmethod
+    def extract_tarball(tar_path: str, extract_to: str) -> str:
+        """Extracts a tarball."""
+        try:
+            if not os.path.exists(tar_path):
+                return f"Error: Tar file '{tar_path}' not found."
+
+            os.makedirs(extract_to, exist_ok=True)
+            with tarfile.open(tar_path, 'r:*') as tar:
+                tar.extractall(extract_to)
+            return f"Successfully extracted {tar_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting tarball: {e}"
+
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algorithm: str = "sha256") -> str:
+        """Generates hash of a string."""
+        try:
+            if algorithm not in hashlib.algorithms_available:
+                return f"Error: Algorithm '{algorithm}' not available. Available: {', '.join(hashlib.algorithms_available)}"
+
+            h = hashlib.new(algorithm)
+            h.update(text.encode('utf-8'))
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def generate_file_hash(filepath: str, algorithm: str = "sha256") -> str:
+        """Generates hash of a file."""
+        try:
+            if not os.path.exists(filepath):
+                return f"Error: File '{filepath}' not found."
+
+            h = hashlib.new(algorithm)
+            with open(filepath, 'rb') as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error generating file hash: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Encodes text to Base64."""
+        try:
+            encoded = base64.b64encode(text.encode('utf-8')).decode('utf-8')
+            return encoded
+        except Exception as e:
+            return f"Error encoding: {e}"
+
+    @staticmethod
+    def base64_decode(text: str) -> str:
+        """Decodes Base64 text."""
+        try:
+            decoded = base64.b64decode(text).decode('utf-8')
+            return decoded
+        except Exception as e:
+            return f"Error decoding: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a UUID4."""
+        return str(uuid.uuid4())

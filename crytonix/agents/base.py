@@ -6,7 +6,8 @@ import re
 from crytonix.llm.client import LLMClient
 from crytonix.tools import (Toolbox, GitHubToolbox, WebToolbox, ProductToolbox, DesignToolbox,
                              CodeAnalysisToolbox, TestingToolbox, DatabaseToolbox, DevOpsToolbox,
-                             DocumentationToolbox, SecurityToolbox, MemoryToolbox, AssetToolbox, ScaffoldToolbox)
+                             DocumentationToolbox, SecurityToolbox, MemoryToolbox, AssetToolbox, ScaffoldToolbox,
+                             ArchiveToolbox, CryptoToolbox)
 from crytonix.llm.token_tracker import TokenTracker
 
 class BaseAgent(ABC):
@@ -206,6 +207,26 @@ class BaseAgent(ABC):
                                      executed_any = True
                                 except Exception as e:
                                      tool_output.append(f"Error executing Scaffold tool '{tool_name}': {e}")
+
+                            # Archive Toolbox
+                            elif hasattr(ArchiveToolbox, tool_name):
+                                method = getattr(ArchiveToolbox, tool_name)
+                                try:
+                                     result = method(**args) if isinstance(args, dict) else method(args)
+                                     tool_output.append(f"Archive Tool '{tool_name}' output:\n{result}")
+                                     executed_any = True
+                                except Exception as e:
+                                     tool_output.append(f"Error executing Archive tool '{tool_name}': {e}")
+
+                            # Crypto Toolbox
+                            elif hasattr(CryptoToolbox, tool_name):
+                                method = getattr(CryptoToolbox, tool_name)
+                                try:
+                                     result = method(**args) if isinstance(args, dict) else method(args)
+                                     tool_output.append(f"Crypto Tool '{tool_name}' output:\n{result}")
+                                     executed_any = True
+                                except Exception as e:
+                                     tool_output.append(f"Error executing Crypto tool '{tool_name}': {e}")
 
                             else:
                                 tool_output.append(f"Error: Tool '{tool_name}' not found.")
