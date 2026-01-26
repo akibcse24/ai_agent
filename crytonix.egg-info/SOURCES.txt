@@ -1,5 +1,11 @@
 README.md
 setup.py
+crytonix/__init__.py
+crytonix/main.py
+crytonix/server.py
+crytonix/tools.py
+crytonix/voice.py
+crytonix/voice_gui.py
 crytonix.egg-info/PKG-INFO
 crytonix.egg-info/SOURCES.txt
 crytonix.egg-info/dependency_links.txt
@@ -10,3 +16,5 @@ tests/test_coding_agent_mock.py
 tests/test_features_mock.py
 tests/test_llm_mock.py
 tests/test_manager_mock.py
+tests/test_new_toolboxes.py
+tests/test_tools_manual.py
