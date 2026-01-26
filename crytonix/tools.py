@@ -2585,3 +2585,182 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host."""
+        import platform
+        import subprocess
+
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, str(count), host]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            return f"Ping failed: {e.stderr}"
+        except Exception as e:
+            return f"Error executing ping: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int, timeout: int = 3) -> str:
+        """Checks if a port is open on a host."""
+        import socket
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                return f"Port {port} on {host} is OPEN."
+        except (socket.timeout, ConnectionRefusedError):
+            return f"Port {port} on {host} is CLOSED or unreachable."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Performs a DNS lookup."""
+        import socket
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup for {domain}: {ip}"
+        except Exception as e:
+            return f"Error resolving domain: {e}"
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algorithm: str = "sha256") -> str:
+        """Generates a hash of a string."""
+        import hashlib
+        try:
+            if algorithm not in hashlib.algorithms_available:
+                return f"Error: Algorithm '{algorithm}' not supported. Available: {', '.join(hashlib.algorithms_available)}"
+
+            h = hashlib.new(algorithm)
+            h.update(text.encode('utf-8'))
+            return f"{algorithm}: {h.hexdigest()}"
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def generate_file_hash(path: str, algorithm: str = "sha256") -> str:
+        """Generates a hash of a file."""
+        import hashlib
+        try:
+            h = hashlib.new(algorithm)
+            with open(path, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+            return f"{algorithm} ({path}): {h.hexdigest()}"
+        except Exception as e:
+            return f"Error hashing file: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Encodes text to Base64."""
+        import base64
+        try:
+            encoded = base64.b64encode(text.encode('utf-8')).decode('utf-8')
+            return f"Base64 Encoded:\n{encoded}"
+        except Exception as e:
+            return f"Error encoding: {e}"
+
+    @staticmethod
+    def base64_decode(encoded_text: str) -> str:
+        """Decodes Base64 text."""
+        import base64
+        try:
+            decoded = base64.b64decode(encoded_text).decode('utf-8')
+            return f"Base64 Decoded:\n{decoded}"
+        except Exception as e:
+            return f"Error decoding: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a UUID."""
+        import uuid
+        return str(uuid.uuid4())
+
+class ArchiveToolbox:
+    """Tools for file archiving and compression."""
+
+    @staticmethod
+    def zip_files(output_filename: str, files: List[str]) -> str:
+        """Creates a zip archive from a list of files."""
+        import zipfile
+        try:
+            with zipfile.ZipFile(output_filename, 'w') as zipf:
+                for file in files:
+                    if os.path.exists(file):
+                        zipf.write(file, os.path.basename(file))
+                    else:
+                        return f"Error: File '{file}' not found."
+            return f"Successfully created {output_filename}"
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str = ".") -> str:
+        """Extracts a zip archive."""
+        import zipfile
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                zipf.extractall(extract_to)
+            return f"Successfully extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
+
+    @staticmethod
+    def create_tarball(output_filename: str, source_dir: str) -> str:
+        """Creates a tar.gz archive from a directory."""
+        import tarfile
+        try:
+            with tarfile.open(output_filename, "w:gz") as tar:
+                tar.add(source_dir, arcname=os.path.basename(source_dir))
+            return f"Successfully created {output_filename}"
+        except Exception as e:
+            return f"Error creating tarball: {e}"
+
+    @staticmethod
+    def extract_tarball(tar_path: str, extract_to: str = ".") -> str:
+        """Extracts a tarball."""
+        import tarfile
+        try:
+            with tarfile.open(tar_path, "r:*") as tar:
+                tar.extractall(extract_to)
+            return f"Successfully extracted {tar_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting tarball: {e}"
+
+class HealthToolbox:
+    """Tools for developer wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds the user to check their posture."""
+        return "🧘 Posture Check: Sit up straight, shoulders back, feet flat on the floor. Your future self will thank you!"
+
+    @staticmethod
+    def stretch_exercise() -> str:
+        """Suggests a quick stretch."""
+        import random
+        stretches = [
+            "Neck Roll: Gently roll your neck in a circle.",
+            "Shoulder Shrug: Lift your shoulders to your ears, hold, and release.",
+            "Wrist Stretch: Extend one arm, pull back fingers with the other hand.",
+            "Torso Twist: Turn your upper body to the left, then to the right."
+        ]
+        return f"🤸 Time to stretch! Try this: {random.choice(stretches)}"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds the user to drink water."""
+        return "💧 Hydration Check: Have you had a sip of water lately? Stay hydrated!"
+
+    @staticmethod
+    def take_break(minutes: int = 5) -> str:
+        """Suggests taking a break."""
+        return f"☕ Break Time: Step away from the screen for {minutes} minutes. Walk around, look at something distant, or just close your eyes."
