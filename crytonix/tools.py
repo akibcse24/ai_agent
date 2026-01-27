@@ -3,6 +3,16 @@ import subprocess
 import glob
 import re
 import json
+import hashlib
+import uuid
+import base64
+import shutil
+import tarfile
+import zipfile
+import socket
+import platform
+import random
+import time
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -2585,3 +2595,208 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class NetworkToolbox:
+    """Tools for network connectivity and diagnostics."""
+
+    @staticmethod
+    def ping(host: str) -> str:
+        """Pings a host to check connectivity."""
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, '4', host]
+
+        try:
+            # Using subprocess.run for safety
+            result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            if result.returncode == 0:
+                return f"✅ Ping {host} successful:\n{result.stdout}"
+            return f"❌ Ping {host} failed:\n{result.stderr}"
+        except Exception as e:
+            return f"Error pinging {host}: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int) -> str:
+        """Checks if a port is open on a host."""
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(3)
+        try:
+            result = sock.connect_ex((host, port))
+            if result == 0:
+                return f"✅ Port {port} on {host} is OPEN."
+            else:
+                return f"❌ Port {port} on {host} is CLOSED (Code: {result})."
+        except Exception as e:
+            return f"Error checking port {port} on {host}: {e}"
+        finally:
+            sock.close()
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Performs a DNS lookup for a domain."""
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup for {domain}:\n  IP Address: {ip}"
+        except Exception as e:
+            return f"Error resolving {domain}: {e}"
+
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algo: str = "sha256") -> str:
+        """Generates a hash of the text using the specified algorithm (md5, sha1, sha256, etc.)."""
+        try:
+            if not hasattr(hashlib, algo):
+                return f"Error: Algorithm '{algo}' not supported. Try md5, sha1, sha256, sha512."
+
+            h = getattr(hashlib, algo)()
+            h.update(text.encode('utf-8'))
+            return f"{algo.upper()} Hash: {h.hexdigest()}"
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def generate_file_hash(path: str, algo: str = "sha256") -> str:
+        """Generates a hash of a file."""
+        try:
+            if not os.path.exists(path):
+                return f"Error: File '{path}' not found."
+
+            if not hasattr(hashlib, algo):
+                return f"Error: Algorithm '{algo}' not supported."
+
+            h = getattr(hashlib, algo)()
+            with open(path, "rb") as f:
+                # Read in chunks to avoid memory issues with large files
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+
+            return f"{algo.upper()} Hash ({path}): {h.hexdigest()}"
+        except Exception as e:
+            return f"Error hashing file: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Encodes text to Base64."""
+        try:
+            encoded = base64.b64encode(text.encode('utf-8')).decode('utf-8')
+            return f"Base64 Encoded:\n{encoded}"
+        except Exception as e:
+            return f"Error encoding: {e}"
+
+    @staticmethod
+    def base64_decode(text: str) -> str:
+        """Decodes Base64 text."""
+        try:
+            decoded = base64.b64decode(text).decode('utf-8')
+            return f"Base64 Decoded:\n{decoded}"
+        except Exception as e:
+            return f"Error decoding: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a random UUID."""
+        return f"UUID: {str(uuid.uuid4())}"
+
+
+class ArchiveToolbox:
+    """Tools for file archiving and compression."""
+
+    @staticmethod
+    def zip_files(files: List[str], output_filename: str) -> str:
+        """Creates a zip archive from a list of files."""
+        try:
+            if not output_filename.endswith('.zip'):
+                output_filename += '.zip'
+
+            with zipfile.ZipFile(output_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in files:
+                    if os.path.exists(file):
+                        zipf.write(file, arcname=os.path.basename(file))
+                    else:
+                        console.print(f"[yellow]Warning: File {file} not found, skipping.[/yellow]")
+
+            return f"✅ Created zip archive: {output_filename}"
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str = ".") -> str:
+        """Extracts a zip file."""
+        try:
+            if not os.path.exists(zip_path):
+                return f"Error: File {zip_path} not found."
+
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                zipf.extractall(extract_to)
+
+            return f"✅ Extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
+
+    @staticmethod
+    def create_tarball(files: List[str], output_filename: str, mode: str = "w:gz") -> str:
+        """Creates a tar archive (default gzip). Mode can be 'w:gz', 'w:bz2', or 'w'."""
+        try:
+            if not any(output_filename.endswith(ext) for ext in ['.tar', '.tar.gz', '.tgz', '.tar.bz2']):
+                ext = ".tar.gz" if "gz" in mode else ".tar"
+                output_filename += ext
+
+            with tarfile.open(output_filename, mode) as tar:
+                for file in files:
+                    if os.path.exists(file):
+                        tar.add(file, arcname=os.path.basename(file))
+                    else:
+                        console.print(f"[yellow]Warning: File {file} not found, skipping.[/yellow]")
+
+            return f"✅ Created tarball: {output_filename}"
+        except Exception as e:
+            return f"Error creating tarball: {e}"
+
+    @staticmethod
+    def extract_tarball(tar_path: str, extract_to: str = ".") -> str:
+        """Extracts a tar archive."""
+        try:
+            if not os.path.exists(tar_path):
+                return f"Error: File {tar_path} not found."
+
+            with tarfile.open(tar_path, 'r:*') as tar:
+                tar.extractall(extract_to)
+
+            return f"✅ Extracted {tar_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting tarball: {e}"
+
+
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds you to check your posture."""
+        tips = [
+            "Sit back in your chair with your back supported.",
+            "Keep your feet flat on the floor.",
+            "Screen should be at eye level.",
+            "Relax your shoulders.",
+            "Keep your elbows close to your body.",
+        ]
+        tip = random.choice(tips)
+        return f"🧘 **Posture Check!**\n{tip}\n(Take a deep breath while you adjust!)"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds you to drink water."""
+        msgs = [
+            "💧 Time for a sip of water!",
+            "Stay hydrated, stay sharp! 🥤",
+            "Your brain needs water to code! 🧠💦",
+            "H2O check! Have you had water recently?",
+        ]
+        return f"{random.choice(msgs)}"
+
+    @staticmethod
+    def take_break(duration_mins: int = 5) -> str:
+        """Suggests taking a break."""
+        return f"🛑 **Time to take a break!**\nStep away from the screen for {duration_mins} minutes.\n- Stretch\n- Look at something 20 feet away\n- Walk around"
