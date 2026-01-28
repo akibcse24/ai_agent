@@ -3,6 +3,13 @@ import subprocess
 import glob
 import re
 import json
+import platform
+import socket
+import zipfile
+import tarfile
+import hashlib
+import base64
+import uuid
 from typing import List, Dict, Any, Optional
 from rich.console import Console
 from rich.prompt import Confirm
@@ -2585,3 +2592,152 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds the user to check their posture."""
+        return "🧘 Posture Check! Sit up straight, relax your shoulders, and take a deep breath."
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds the user to drink water."""
+        return "💧 Hydration Check! Don't forget to drink a glass of water."
+
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host."""
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        cmd = ["ping", param, str(count), host]
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            return f"Ping failed: {e.stderr}"
+        except Exception as e:
+            return f"Error pinging: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int, timeout: int = 5) -> str:
+        """Checks if a TCP port is open."""
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                return f"✅ Port {port} on {host} is OPEN."
+        except (socket.timeout, ConnectionRefusedError):
+            return f"❌ Port {port} on {host} is CLOSED or unreachable."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Resolves a domain name to an IP address."""
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup for {domain}: {ip}"
+        except Exception as e:
+            return f"Error resolving domain: {e}"
+
+
+class ArchiveToolbox:
+    """Tools for file archiving and compression."""
+
+    @staticmethod
+    def zip_files(files: List[str], output_zip: str) -> str:
+        """Zips a list of files."""
+        try:
+            with zipfile.ZipFile(output_zip, 'w') as zf:
+                for file in files:
+                    if os.path.exists(file):
+                        zf.write(file, os.path.basename(file))
+                    else:
+                        return f"Error: File {file} not found."
+            return f"✅ Created zip archive: {output_zip}"
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str = ".") -> str:
+        """Unzips an archive."""
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zf:
+                zf.extractall(extract_to)
+            return f"✅ Extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
+
+    @staticmethod
+    def create_tarball(files: List[str], output_tar: str, mode: str = "w:gz") -> str:
+        """Creates a tarball (default gzip)."""
+        try:
+            with tarfile.open(output_tar, mode) as tar:
+                for file in files:
+                    if os.path.exists(file):
+                        tar.add(file, arcname=os.path.basename(file))
+                    else:
+                         return f"Error: File {file} not found."
+            return f"✅ Created tarball: {output_tar}"
+        except Exception as e:
+            return f"Error creating tarball: {e}"
+
+    @staticmethod
+    def extract_tarball(tar_path: str, extract_to: str = ".") -> str:
+        """Extracts a tarball."""
+        try:
+            with tarfile.open(tar_path, 'r:*') as tar:
+                tar.extractall(extract_to)
+            return f"✅ Extracted {tar_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting tarball: {e}"
+
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algorithm: str = "sha256") -> str:
+        """Generates a hash of the text."""
+        try:
+            if algorithm not in hashlib.algorithms_available:
+                return f"Error: Algorithm {algorithm} not available."
+            h = hashlib.new(algorithm)
+            h.update(text.encode('utf-8'))
+            return f"{algorithm.upper()}: {h.hexdigest()}"
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def generate_file_hash(filepath: str, algorithm: str = "sha256") -> str:
+        """Generates a hash of a file."""
+        try:
+            h = hashlib.new(algorithm)
+            with open(filepath, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+            return f"{algorithm.upper()} ({filepath}): {h.hexdigest()}"
+        except Exception as e:
+            return f"Error hashing file: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Base64 encodes text."""
+        encoded = base64.b64encode(text.encode('utf-8')).decode('utf-8')
+        return encoded
+
+    @staticmethod
+    def base64_decode(text: str) -> str:
+        """Base64 decodes text."""
+        try:
+            decoded = base64.b64decode(text).decode('utf-8')
+            return decoded
+        except Exception as e:
+            return f"Error decoding base64: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a random UUID."""
+        return str(uuid.uuid4())

@@ -6,7 +6,8 @@ import re
 from crytonix.llm.client import LLMClient
 from crytonix.tools import (Toolbox, GitHubToolbox, WebToolbox, ProductToolbox, DesignToolbox,
                              CodeAnalysisToolbox, TestingToolbox, DatabaseToolbox, DevOpsToolbox,
-                             DocumentationToolbox, SecurityToolbox, MemoryToolbox, AssetToolbox, ScaffoldToolbox)
+                             DocumentationToolbox, SecurityToolbox, MemoryToolbox, AssetToolbox, ScaffoldToolbox,
+                             HealthToolbox, NetworkToolbox, ArchiveToolbox, CryptoToolbox)
 from crytonix.llm.token_tracker import TokenTracker
 
 class BaseAgent(ABC):
@@ -68,146 +69,36 @@ class BaseAgent(ABC):
                         
                         if tool_name:
                             # Map tool names to Toolbox methods
-                            if hasattr(Toolbox, tool_name):
-                                method = getattr(Toolbox, tool_name)
-                                try:
-                                    # Call the method with unpacked arguments
-                                    result = method(**args) if isinstance(args, dict) else method(args)
-                                    tool_output.append(f"Tool '{tool_name}' output:\n{result}")
-                                    executed_any = True
-                                except Exception as e:
-                                    tool_output.append(f"Error executing '{tool_name}': {e}")
+                            toolboxes = [
+                                Toolbox, GitHubToolbox, WebToolbox, ProductToolbox, DesignToolbox,
+                                CodeAnalysisToolbox, TestingToolbox, DatabaseToolbox, DevOpsToolbox,
+                                DocumentationToolbox, SecurityToolbox, MemoryToolbox, AssetToolbox, ScaffoldToolbox,
+                                HealthToolbox, NetworkToolbox, ArchiveToolbox, CryptoToolbox
+                            ]
                             
-                            # Map tool names to GitHubToolbox methods
-                            elif hasattr(GitHubToolbox, tool_name):
-                                method = getattr(GitHubToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"GitHub Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing GitHub tool '{tool_name}': {e}")
-                            
-                            # Map tool names to WebToolbox methods
-                            elif hasattr(WebToolbox, tool_name):
-                                method = getattr(WebToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Web Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Web tool '{tool_name}': {e}")
-                            # Map tool names to ProductToolbox methods
-                            elif hasattr(ProductToolbox, tool_name):
-                                method = getattr(ProductToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Product Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Product tool '{tool_name}': {e}")
+                            found = False
+                            for tb in toolboxes:
+                                if hasattr(tb, tool_name):
+                                    method = getattr(tb, tool_name)
+                                    try:
+                                        # Call the method with unpacked arguments
+                                        result = method(**args) if isinstance(args, dict) else method(args)
 
-                            # Map tool names to DesignToolbox methods
-                            elif hasattr(DesignToolbox, tool_name):
-                                method = getattr(DesignToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Design Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Design tool '{tool_name}': {e}")
-                            
-                            # Code Analysis Toolbox
-                            elif hasattr(CodeAnalysisToolbox, tool_name):
-                                method = getattr(CodeAnalysisToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Code Analysis Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Code Analysis tool '{tool_name}': {e}")
-                            
-                            # Testing Toolbox
-                            elif hasattr(TestingToolbox, tool_name):
-                                method = getattr(TestingToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Testing Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Testing tool '{tool_name}': {e}")
-                            
-                            # Database Toolbox
-                            elif hasattr(DatabaseToolbox, tool_name):
-                                method = getattr(DatabaseToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Database Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Database tool '{tool_name}': {e}")
-                            
-                            # DevOps Toolbox
-                            elif hasattr(DevOpsToolbox, tool_name):
-                                method = getattr(DevOpsToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"DevOps Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing DevOps tool '{tool_name}': {e}")
-                            
-                            # Documentation Toolbox
-                            elif hasattr(DocumentationToolbox, tool_name):
-                                method = getattr(DocumentationToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Documentation Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Documentation tool '{tool_name}': {e}")
-                            
-                            # Security Toolbox
-                            elif hasattr(SecurityToolbox, tool_name):
-                                method = getattr(SecurityToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Security Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Security tool '{tool_name}': {e}")
-                            
-                            # Memory Toolbox
-                            elif hasattr(MemoryToolbox, tool_name):
-                                method = getattr(MemoryToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Memory Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Memory tool '{tool_name}': {e}")
-                            
-                            # Asset Toolbox
-                            elif hasattr(AssetToolbox, tool_name):
-                                method = getattr(AssetToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Asset Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Asset tool '{tool_name}': {e}")
-                            
-                            # Scaffold Toolbox
-                            elif hasattr(ScaffoldToolbox, tool_name):
-                                method = getattr(ScaffoldToolbox, tool_name)
-                                try:
-                                     result = method(**args) if isinstance(args, dict) else method(args)
-                                     tool_output.append(f"Scaffold Tool '{tool_name}' output:\n{result}")
-                                     executed_any = True
-                                except Exception as e:
-                                     tool_output.append(f"Error executing Scaffold tool '{tool_name}': {e}")
+                                        # Nice display name
+                                        tb_name = tb.__name__.replace("Toolbox", "")
+                                        if tb_name == "Toolbox": tb_name = "Tool"
+                                        else: tb_name += " Tool"
 
-                            else:
+                                        tool_output.append(f"{tb_name} '{tool_name}' output:\n{result}")
+                                        executed_any = True
+                                        found = True
+                                        break
+                                    except Exception as e:
+                                        tool_output.append(f"Error executing '{tool_name}': {e}")
+                                        found = True
+                                        break
+                            
+                            if not found:
                                 tool_output.append(f"Error: Tool '{tool_name}' not found.")
             except json.JSONDecodeError:
                 pass # Not valid JSON, maybe just code snippet
