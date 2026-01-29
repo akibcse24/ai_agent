@@ -2585,3 +2585,153 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class NetworkToolbox:
+    """Tools for network diagnostics and utilities."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host."""
+        import platform
+        import subprocess
+
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, str(count), host]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            return f"Ping failed: {e.stderr or e.stdout}"
+        except Exception as e:
+            return f"Error pinging host: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int, timeout: int = 2) -> str:
+        """Checks if a TCP port is open."""
+        import socket
+
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.settimeout(timeout)
+                result = s.connect_ex((host, port))
+                if result == 0:
+                    return f"✅ Port {port} on {host} is OPEN."
+                else:
+                    return f"❌ Port {port} on {host} is CLOSED (Code: {result})."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Performs a DNS lookup."""
+        import socket
+
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup for {domain}: {ip}"
+        except socket.gaierror:
+            return f"DNS Lookup failed: Could not resolve {domain}"
+        except Exception as e:
+            return f"Error performing DNS lookup: {e}"
+
+
+class ArchiveToolbox:
+    """Tools for file archiving and compression."""
+
+    @staticmethod
+    def zip_files(output_filename: str, file_paths: List[str]) -> str:
+        """Creates a zip archive from a list of files."""
+        import zipfile
+        import os
+
+        try:
+            with zipfile.ZipFile(output_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in file_paths:
+                    if os.path.exists(file):
+                        zipf.write(file, os.path.basename(file))
+                    else:
+                        return f"Error: File {file} not found."
+            return f"Successfully created {output_filename}"
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str = ".") -> str:
+        """Extracts a zip archive safely."""
+        import zipfile
+        import os
+
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                # Zip Slip protection
+                for member in zipf.namelist():
+                    abs_path = os.path.abspath(os.path.join(extract_to, member))
+                    if not abs_path.startswith(os.path.abspath(extract_to)):
+                        return f"Error: Attempted Zip Slip attack with file: {member}"
+
+                zipf.extractall(extract_to)
+            return f"Successfully extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
+
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algorithm: str = 'sha256') -> str:
+        """Generates a hash of the text."""
+        import hashlib
+
+        try:
+            if not hasattr(hashlib, algorithm):
+                return f"Error: Unsupported algorithm '{algorithm}'"
+
+            hash_obj = getattr(hashlib, algorithm)()
+            hash_obj.update(text.encode('utf-8'))
+            return hash_obj.hexdigest()
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Encodes text to Base64."""
+        import base64
+
+        try:
+            encoded = base64.b64encode(text.encode('utf-8')).decode('utf-8')
+            return encoded
+        except Exception as e:
+            return f"Error encoding: {e}"
+
+    @staticmethod
+    def base64_decode(encoded_text: str) -> str:
+        """Decodes Base64 text."""
+        import base64
+
+        try:
+            decoded = base64.b64decode(encoded_text).decode('utf-8')
+            return decoded
+        except Exception as e:
+            return f"Error decoding: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a random UUID."""
+        import uuid
+        return str(uuid.uuid4())
+
+
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds you to check your posture."""
+        return "🧘 Posture Check! Sit up straight, relax your shoulders, and take a deep breath."
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds you to drink water."""
+        return "💧 Time to hydrate! Grab a glass of water."
