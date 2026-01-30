@@ -2585,3 +2585,107 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class PDFToolbox:
+    """Tools for PDF manipulation."""
+
+    @staticmethod
+    def extract_text(pdf_path: str) -> str:
+        """Extracts text from a PDF file."""
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            return "Error: pypdf not installed. Run `pip install pypdf`."
+
+        try:
+            reader = PdfReader(pdf_path)
+            text = []
+            for page in reader.pages:
+                text.append(page.extract_text())
+            return "\n".join(text)
+        except Exception as e:
+            return f"Error extracting text from PDF: {e}"
+
+    @staticmethod
+    def merge_pdfs(pdf_list: List[str], output_path: str) -> str:
+        """Merges multiple PDFs into one."""
+        try:
+            from pypdf import PdfWriter
+        except ImportError:
+            return "Error: pypdf not installed. Run `pip install pypdf`."
+
+        try:
+            merger = PdfWriter()
+            for pdf in pdf_list:
+                merger.append(pdf)
+            merger.write(output_path)
+            merger.close()
+            return f"Successfully merged {len(pdf_list)} PDFs into {output_path}"
+        except Exception as e:
+            return f"Error merging PDFs: {e}"
+
+    @staticmethod
+    def create_from_text(text: str, output_path: str) -> str:
+        """Creates a simple PDF from text."""
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+        except ImportError:
+            return "Error: reportlab not installed. Run `pip install reportlab`."
+
+        try:
+            c = canvas.Canvas(output_path, pagesize=letter)
+            width, height = letter
+            text_object = c.beginText(40, height - 40)
+            text_object.setFont("Helvetica", 12)
+
+            for line in text.split('\n'):
+                text_object.textLine(line)
+
+            c.drawText(text_object)
+            c.save()
+            return f"Successfully created PDF at {output_path}"
+        except Exception as e:
+            return f"Error creating PDF: {e}"
+
+
+class AudioToolbox:
+    """Tools for audio processing and TTS."""
+
+    @staticmethod
+    def text_to_speech(text: str, output_path: str = "output.mp3") -> str:
+        """Converts text to speech."""
+        try:
+            import pyttsx3
+        except ImportError:
+            return "Error: pyttsx3 not installed. Run `pip install pyttsx3`."
+
+        try:
+            engine = pyttsx3.init()
+            engine.save_to_file(text, output_path)
+            engine.runAndWait()
+            return f"Audio saved to {output_path}"
+        except Exception as e:
+            return f"Error generating audio: {e}"
+
+    @staticmethod
+    def get_metadata(file_path: str) -> str:
+        """Gets metadata for an audio file."""
+        try:
+            import mutagen
+        except ImportError:
+            return "Error: mutagen not installed. Run `pip install mutagen`."
+
+        try:
+            audio = mutagen.File(file_path)
+            if audio is None:
+                return "Could not load audio file."
+
+            info = []
+            if hasattr(audio, 'info'):
+                info.append(f"Duration: {audio.info.length:.2f}s")
+                info.append(f"Bitrate: {getattr(audio.info, 'bitrate', 'Unknown')} bps")
+                info.append(f"Sample Rate: {getattr(audio.info, 'sample_rate', 'Unknown')} Hz")
+
+            return "\n".join(info)
+        except Exception as e:
+            return f"Error reading metadata: {e}"
