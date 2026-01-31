@@ -2585,3 +2585,131 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class ArchiveToolbox:
+    """Tools for handling archives (zip, tar, etc.)."""
+
+    @staticmethod
+    def compress(source_path: str, output_path: str, archive_format: str = 'zip') -> str:
+        """Compresses a file or directory. Format: 'zip', 'tar', 'gztar', 'bztar', 'xztar'."""
+        import shutil
+
+        try:
+            # shutil.make_archive handles zip and tar formats
+
+            # Map user format to shutil format
+            # shutil formats: 'zip', 'tar', 'gztar', 'bztar', 'xztar'
+            format_map = {
+                'zip': 'zip',
+                'tar': 'tar',
+                'tar.gz': 'gztar',
+                'gz': 'gztar',
+                'tgz': 'gztar',
+                'tar.bz2': 'bztar',
+                'bz2': 'bztar',
+                'tar.xz': 'xztar',
+                'xz': 'xztar'
+            }
+
+            shutil_format = format_map.get(archive_format.lower(), 'zip')
+
+            if os.path.isfile(source_path):
+                # shutil.make_archive is for directories. Handle file manually.
+                if shutil_format == 'zip':
+                    import zipfile
+                    if not output_path.endswith('.zip'):
+                        output_path += '.zip'
+                    with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zf:
+                        zf.write(source_path, os.path.basename(source_path))
+                    return f"Compressed to {output_path}"
+
+                elif shutil_format in ['tar', 'gztar', 'bztar', 'xztar']:
+                    import tarfile
+                    mode = 'w'
+                    if shutil_format == 'gztar': mode = 'w:gz'
+                    elif shutil_format == 'bztar': mode = 'w:bz2'
+                    elif shutil_format == 'xztar': mode = 'w:xz'
+
+                    # Ensure extension
+                    ext_map = {'tar': '.tar', 'gztar': '.tar.gz', 'bztar': '.tar.bz2', 'xztar': '.tar.xz'}
+                    # Reverse format_map to get canonical extension for the requested format is tricky because of many-to-one
+                    # But we know what shutil_format is.
+
+                    # Use a mapping from shutil_format to extension
+                    shutil_format_to_ext = {
+                        'tar': '.tar',
+                        'gztar': '.tar.gz',
+                        'bztar': '.tar.bz2',
+                        'xztar': '.tar.xz'
+                    }
+                    ext = shutil_format_to_ext.get(shutil_format, '.tar')
+
+                    if not output_path.endswith(ext) and not output_path.endswith('.tar') and not output_path.endswith('.tgz'):
+                        # If user didn't provide a matching extension, append the default one
+                        output_path += ext
+
+                    with tarfile.open(output_path, mode) as tar:
+                        tar.add(source_path, arcname=os.path.basename(source_path))
+                    return f"Compressed to {output_path}"
+
+            # For directories, use shutil.make_archive
+            # Note: make_archive adds extension automatically if not present in base_name
+            base_name = output_path
+            possible_exts = ['.zip', '.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tbz2', '.tar.xz', '.txz']
+            for ext in possible_exts:
+                if base_name.endswith(ext):
+                    base_name = base_name[:-len(ext)]
+                    break
+
+            final_path = shutil.make_archive(base_name, shutil_format, source_path)
+            return f"Compressed to {final_path}"
+
+        except Exception as e:
+            return f"Error compressing: {e}"
+
+    @staticmethod
+    def extract(archive_path: str, extract_path: str) -> str:
+        """Extracts an archive."""
+        import shutil
+
+        try:
+            # Note: tarfile.extractall allows extraction of absolute paths or paths with '..',
+            # which is a security risk (Zip Slip). Python 3.12+ provides a 'filter' argument.
+            # Ideally we should use filter='data' but it might break legacy archives if they rely on it.
+            # Since this is a tool for developers/agents, we assume some trust, but 'data' is safer default.
+
+            if archive_path.endswith('.zip'):
+                import zipfile
+                with zipfile.ZipFile(archive_path, 'r') as zf:
+                    zf.extractall(extract_path)
+            elif archive_path.endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tar.xz')):
+                import tarfile
+                with tarfile.open(archive_path, 'r:*') as tar:
+                     if hasattr(tarfile, 'data_filter'):
+                        tar.extractall(extract_path, filter='data')
+                     else:
+                        tar.extractall(extract_path)
+            else:
+                 # Try shutil as fallback
+                shutil.unpack_archive(archive_path, extract_path)
+
+            return f"Extracted to {extract_path}"
+        except Exception as e:
+            return f"Error extracting: {e}"
+
+    @staticmethod
+    def list_archive_content(archive_path: str) -> str:
+        """Lists files inside an archive."""
+        try:
+            if archive_path.endswith('.zip'):
+                import zipfile
+                with zipfile.ZipFile(archive_path, 'r') as zf:
+                    return "\n".join(zf.namelist())
+            elif archive_path.endswith(('.tar', '.tar.gz', '.tgz', '.tar.bz2', '.tar.xz')):
+                import tarfile
+                with tarfile.open(archive_path, 'r:*') as tar:
+                    return "\n".join(tar.getnames())
+            else:
+                return "Unsupported archive format for listing."
+        except Exception as e:
+            return f"Error listing archive content: {e}"
