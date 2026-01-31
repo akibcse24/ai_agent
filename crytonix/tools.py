@@ -2585,3 +2585,275 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+class HealthToolbox:
+    """Tools for developer wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds the user to check their posture."""
+        return "🧘 Posture Check: Sit up straight, shoulders back, feet flat on the floor. Take a deep breath."
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds the user to drink water."""
+        return "💧 Hydration Check: Have you had a glass of water recently? Stay hydrated for peak performance!"
+
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host."""
+        import platform
+
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, str(count), host]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, check=True)
+            return result.stdout
+        except subprocess.CalledProcessError as e:
+            return f"Ping failed: {e.stderr}"
+        except Exception as e:
+            return f"Error executing ping: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int, timeout: int = 3) -> str:
+        """Checks if a TCP port is open."""
+        import socket
+
+        try:
+            with socket.create_connection((host, port), timeout=timeout):
+                return f"✅ Port {port} on {host} is OPEN."
+        except (socket.timeout, ConnectionRefusedError):
+            return f"❌ Port {port} on {host} is CLOSED or unreachable."
+        except Exception as e:
+            return f"Error checking port: {e}"
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Performs a DNS lookup."""
+        import socket
+
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup for {domain}: {ip}"
+        except Exception as e:
+            return f"Error resolving domain: {e}"
+
+
+class ArchiveToolbox:
+    """Tools for file archiving."""
+
+    @staticmethod
+    def zip_files(source_path: str, output_path: str) -> str:
+        """Zips files or directories."""
+        import zipfile
+
+        try:
+            with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                if os.path.isfile(source_path):
+                    zipf.write(source_path, os.path.basename(source_path))
+                else:
+                    for root, _, files in os.walk(source_path):
+                        for file in files:
+                            file_path = os.path.join(root, file)
+                            arcname = os.path.relpath(file_path, os.path.dirname(source_path))
+                            zipf.write(file_path, arcname)
+            return f"✅ Successfully created {output_path}"
+        except Exception as e:
+            return f"Error zipping files: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str) -> str:
+        """Unzips a file securely (preventing Zip Slip)."""
+        import zipfile
+
+        try:
+            if not os.path.exists(extract_to):
+                os.makedirs(extract_to)
+
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                for member in zipf.infolist():
+                    # Zip Slip protection
+                    dest_path = os.path.normpath(os.path.abspath(os.path.join(extract_to, member.filename)))
+                    target_dir = os.path.normpath(os.path.abspath(extract_to))
+
+                    if not dest_path.startswith(target_dir):
+                         return f"❌ Security Error: Zip Slip attempt detected for {member.filename}"
+
+                    zipf.extract(member, extract_to)
+            return f"✅ Successfully extracted to {extract_to}"
+        except Exception as e:
+            return f"Error unzipping file: {e}"
+
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algorithm: str = "sha256") -> str:
+        """Generates a hash of a string."""
+        import hashlib
+
+        try:
+            if not hasattr(hashlib, algorithm):
+                return f"Error: Algorithm '{algorithm}' not supported."
+
+            h = getattr(hashlib, algorithm)()
+            h.update(text.encode('utf-8'))
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def generate_file_hash(filepath: str, algorithm: str = "sha256") -> str:
+        """Generates a hash of a file."""
+        import hashlib
+
+        try:
+            if not hasattr(hashlib, algorithm):
+                 return f"Error: Algorithm '{algorithm}' not supported."
+
+            h = getattr(hashlib, algorithm)()
+            with open(filepath, 'rb') as f:
+                while chunk := f.read(8192):
+                    h.update(chunk)
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error hashing file: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Encodes text to Base64."""
+        import base64
+        try:
+            return base64.b64encode(text.encode('utf-8')).decode('utf-8')
+        except Exception as e:
+            return f"Error encoding: {e}"
+
+    @staticmethod
+    def base64_decode(encoded_text: str) -> str:
+        """Decodes Base64 text."""
+        import base64
+        try:
+            return base64.b64decode(encoded_text).decode('utf-8')
+        except Exception as e:
+            return f"Error decoding: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a random UUID."""
+        import uuid
+        return str(uuid.uuid4())
+
+class PDFToolbox:
+    """Tools for PDF manipulation."""
+
+    @staticmethod
+    def extract_text(pdf_path: str) -> str:
+        """Extracts text from a PDF file."""
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            return "Error: pypdf not installed. Run `pip install pypdf`."
+
+        try:
+            reader = PdfReader(pdf_path)
+            text = []
+            for page in reader.pages:
+                text.append(page.extract_text())
+            return "\n".join(text)
+        except Exception as e:
+            return f"Error extracting text from PDF: {e}"
+
+    @staticmethod
+    def merge_pdfs(pdf_paths: List[str], output_path: str) -> str:
+        """Merges multiple PDFs into one."""
+        try:
+            from pypdf import PdfWriter
+        except ImportError:
+            return "Error: pypdf not installed. Run `pip install pypdf`."
+
+        try:
+            merger = PdfWriter()
+            for pdf in pdf_paths:
+                merger.append(pdf)
+            merger.write(output_path)
+            merger.close()
+            return f"✅ Successfully merged {len(pdf_paths)} PDFs into {output_path}"
+        except Exception as e:
+            return f"Error merging PDFs: {e}"
+
+    @staticmethod
+    def create_pdf(text: str, output_path: str) -> str:
+        """Creates a simple PDF from text."""
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+        except ImportError:
+            return "Error: reportlab not installed. Run `pip install reportlab`."
+
+        try:
+            c = canvas.Canvas(output_path, pagesize=letter)
+            width, height = letter
+            y = height - 40
+            for line in text.split('\n'):
+                c.drawString(40, y, line)
+                y -= 15
+                if y < 40:
+                    c.showPage()
+                    y = height - 40
+            c.save()
+            return f"✅ Successfully created PDF: {output_path}"
+        except Exception as e:
+            return f"Error creating PDF: {e}"
+
+
+class AudioToolbox:
+    """Tools for audio processing."""
+
+    @staticmethod
+    def text_to_speech(text: str, output_path: str = "output.mp3") -> str:
+        """Converts text to speech (requires system audio libraries)."""
+        try:
+            import pyttsx3
+        except ImportError:
+            return "Error: pyttsx3 not installed. Run `pip install pyttsx3`."
+
+        try:
+            engine = pyttsx3.init()
+            if output_path:
+                engine.save_to_file(text, output_path)
+                engine.runAndWait()
+                return f"✅ Audio saved to {output_path}"
+            else:
+                engine.say(text)
+                engine.runAndWait()
+                return "✅ Spoken successfully."
+        except Exception as e:
+            return f"Error in TTS: {e}"
+
+    @staticmethod
+    def get_metadata(audio_path: str) -> str:
+        """Extracts metadata from an audio file."""
+        try:
+            import mutagen
+        except ImportError:
+            return "Error: mutagen not installed. Run `pip install mutagen`."
+
+        try:
+            audio = mutagen.File(audio_path)
+            if audio is None:
+                return "Could not load audio file."
+
+            info = []
+            info.append(f"Duration: {audio.info.length:.2f} seconds")
+            info.append(f"Bitrate: {audio.info.bitrate // 1000} kbps")
+            info.append(f"Channels: {audio.info.channels}")
+            info.append(f"Sample Rate: {audio.info.sample_rate} Hz")
+
+            return "\n".join(info)
+        except Exception as e:
+            return f"Error getting metadata: {e}"
