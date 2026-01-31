@@ -20,6 +20,7 @@ from crytonix.agents.verification import VerificationAgent
 from crytonix.agents.architect import ArchitectAgent
 from crytonix.server import run_server_in_background
 from crytonix.voice import VoiceManager, JervisMode, VoiceConfig, create_jervis
+from crytonix.dashboard import ProjectDashboard
 
 console = Console()
 CONFIG_DIR = os.path.expanduser("~/.crytonix")
@@ -77,8 +78,31 @@ def main():
     parser.add_argument("--jervis", action="store_true", help="Enable full Jervis Mode (wake word 'Hey Crytonix', continuous conversation)")
     parser.add_argument("--voice-persona", choices=["jarvis", "friday", "british", "aussie"], default="jarvis", help="Voice persona for TTS")
     parser.add_argument("--tdd", action="store_true", help="Enforce Test-Driven Development workflow")
+    parser.add_argument("--dashboard", action="store_true", help="Launch Project Health Dashboard")
+    parser.add_argument("--gui", action="store_true", help="Launch Professional GUI Mode")
     
     args = parser.parse_args()
+
+    # Handle GUI
+    if args.gui:
+        try:
+            from crytonix.gui.app import CrytonixApp
+            app = CrytonixApp()
+            app.mainloop()
+            sys.exit(0)
+        except Exception as e:
+            console.print(f"[bold red]GUI Error:[/bold red] {e}")
+            sys.exit(1)
+
+    # Handle Dashboard
+    if args.dashboard:
+        try:
+            dashboard = ProjectDashboard()
+            dashboard.render()
+            sys.exit(0)
+        except Exception as e:
+            console.print(f"[bold red]Dashboard Error:[/bold red] {e}")
+            sys.exit(1)
 
     # Handle List Sessions
     if args.list_sessions:

@@ -10,3 +10,4 @@ tests/test_coding_agent_mock.py
 tests/test_features_mock.py
 tests/test_llm_mock.py
 tests/test_manager_mock.py
+tests/test_tools_manual.py
