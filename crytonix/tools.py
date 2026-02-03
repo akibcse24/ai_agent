@@ -2585,3 +2585,252 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+
+class HealthToolbox:
+    """Tools for developer wellness and health."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Returns a posture check reminder."""
+        import random
+        reminders = [
+            "⚠️ Time to check your posture! Sit up straight, shoulders back.",
+            "🪑 Uncross your legs and plant your feet flat on the floor.",
+            "📏 Align your ears with your shoulders.",
+            "💪 Engage your core and relax your shoulders.",
+            "👀 Level your gaze with the top third of your monitor."
+        ]
+        return random.choice(reminders)
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Returns a hydration reminder."""
+        import random
+        reminders = [
+            "💧 Time for a water break! Your brain needs it.",
+            "🥤 Sip some water. Dehydration reduces focus.",
+            "🚰 Empty glass? Go refill it!",
+            "🧊 Stay cool, stay hydrated.",
+            "🌊 Water is life. Drink up!"
+        ]
+        return random.choice(reminders)
+
+    @staticmethod
+    def suggest_stretch() -> str:
+        """Suggests a quick desk stretch."""
+        import random
+        stretches = [
+            "🙆‍♂️ Neck Roll: Gently roll your head from side to side.",
+            "🤷‍♀️ Shoulder Shrugs: Lift shoulders to ears, hold, and release.",
+            "🙌 Overhead Reach: Interlace fingers and push palms up towards the ceiling.",
+            "👐 Wrist Flex: Gently pull fingers back with arm extended.",
+            "🔄 Torso Twist: Look over your shoulder while keeping hips forward."
+        ]
+        return random.choice(stretches)
+
+    @staticmethod
+    def eye_strain_relief() -> str:
+        """Returns the 20-20-20 rule for eye strain."""
+        return ("👀 **20-20-20 Rule**:\n"
+                "Every **20 minutes**, look at something **20 feet away** for at least **20 seconds**.\n"
+                "This helps reduce eye strain from screen usage.")
+
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str, count: int = 4) -> str:
+        """Pings a host."""
+        import subprocess
+        import platform
+
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, str(count), host]
+
+        try:
+            result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+            return result.stdout
+        except subprocess.TimeoutExpired:
+            return f"Ping to {host} timed out."
+        except Exception as e:
+            return f"Error pinging {host}: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int) -> str:
+        """Checks if a TCP port is open."""
+        import socket
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(3)
+        try:
+            result = sock.connect_ex((host, port))
+            if result == 0:
+                return f"✅ Port {port} on {host} is OPEN."
+            else:
+                return f"❌ Port {port} on {host} is CLOSED (code: {result})."
+        except Exception as e:
+            return f"Error checking port: {e}"
+        finally:
+            sock.close()
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Resolves a domain name to IP address."""
+        import socket
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup: {domain} -> {ip}"
+        except Exception as e:
+            return f"Error resolving {domain}: {e}"
+
+    @staticmethod
+    def my_ip() -> str:
+        """Gets the public IP address of the machine."""
+        try:
+            import requests
+            return f"Public IP: {requests.get('https://api.ipify.org', timeout=5).text}"
+        except ImportError:
+             return "Error: requests not installed."
+        except Exception as e:
+            return f"Error fetching IP: {e}"
+
+
+class ArchiveToolbox:
+    """Tools for file archiving."""
+
+    @staticmethod
+    def zip_files(output_filename: str, files: List[str]) -> str:
+        """Zips a list of files into an archive."""
+        import zipfile
+
+        try:
+            with zipfile.ZipFile(output_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in files:
+                    if os.path.exists(file):
+                        zipf.write(file, os.path.basename(file))
+                    else:
+                        return f"Error: File {file} not found."
+            return f"✅ Successfully created {output_filename} with {len(files)} files."
+        except Exception as e:
+            return f"Error zipping files: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str = ".") -> str:
+        """Unzips an archive."""
+        import zipfile
+
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                zipf.extractall(extract_to)
+            return f"✅ extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error unzipping file: {e}"
+
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algorithm: str = "sha256") -> str:
+        """Generates a hash of the text (md5, sha1, sha256, sha512)."""
+        import hashlib
+
+        try:
+            if hasattr(hashlib, algorithm):
+                h = getattr(hashlib, algorithm)()
+                h.update(text.encode('utf-8'))
+                return f"{algorithm.upper()}: {h.hexdigest()}"
+            else:
+                return f"Unsupported algorithm: {algorithm}"
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Encodes text to Base64."""
+        import base64
+        return base64.b64encode(text.encode('utf-8')).decode('utf-8')
+
+    @staticmethod
+    def base64_decode(encoded_text: str) -> str:
+        """Decodes Base64 text."""
+        import base64
+        try:
+            return base64.b64decode(encoded_text).decode('utf-8')
+        except Exception as e:
+            return f"Error decoding base64: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a random UUID."""
+        import uuid
+        return str(uuid.uuid4())
+
+
+class LocalizationToolbox:
+    """Tools for localization and i18n."""
+
+    @staticmethod
+    def find_hardcoded_strings(path: str = ".") -> str:
+        """Finds string literals in Python files that might need translation."""
+        import ast
+
+        results = []
+        try:
+            for root, _, files in os.walk(path):
+                if ".git" in root or "__pycache__" in root or "venv" in root:
+                    continue
+                for file in files:
+                    if file.endswith('.py'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8') as f:
+                                tree = ast.parse(f.read())
+
+                            for node in ast.walk(tree):
+                                if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                                    s = node.value
+                                    if len(s) > 3 and " " in s:
+                                        # Simple heuristic: longer than 3 chars, contains space
+                                        results.append(f"{file_path}:{node.lineno}: \"{s}\"")
+                        except:
+                            pass
+
+            if results:
+                return "Potential hardcoded strings:\n" + "\n".join(results[:50])
+            return "No obvious hardcoded strings found."
+        except Exception as e:
+            return f"Error finding strings: {e}"
+
+    @staticmethod
+    def verify_keys_sync(source_file: str, target_file: str) -> str:
+        """Checks if all keys in source JSON exist in target JSON."""
+        import json
+
+        try:
+            with open(source_file, 'r', encoding='utf-8') as f:
+                source = json.load(f)
+            with open(target_file, 'r', encoding='utf-8') as f:
+                target = json.load(f)
+
+            def get_keys(obj, prefix=""):
+                keys = set()
+                if isinstance(obj, dict):
+                    for k, v in obj.items():
+                        full_key = f"{prefix}.{k}" if prefix else k
+                        keys.add(full_key)
+                        keys.update(get_keys(v, full_key))
+                return keys
+
+            source_keys = get_keys(source)
+            target_keys = get_keys(target)
+
+            missing = source_keys - target_keys
+
+            if missing:
+                return f"Missing keys in {target_file}:\n" + "\n".join(sorted(missing))
+            return f"✅ {target_file} is in sync with {source_file}."
+        except Exception as e:
+            return f"Error verifying keys: {e}"
