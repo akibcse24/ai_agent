@@ -2585,3 +2585,113 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class SystemInfoToolbox:
+    """Tools for retrieving system and hardware information."""
+
+    @staticmethod
+    def get_system_info() -> str:
+        """Returns basic system information."""
+        import platform
+
+        try:
+            uname = platform.uname()
+            info = [
+                f"System: {uname.system}",
+                f"Node Name: {uname.node}",
+                f"Release: {uname.release}",
+                f"Version: {uname.version}",
+                f"Machine: {uname.machine}",
+                f"Processor: {uname.processor}",
+                f"Python Version: {platform.python_version()}"
+            ]
+            return "\n".join(info)
+        except Exception as e:
+            return f"Error getting system info: {e}"
+
+    @staticmethod
+    def get_resource_usage() -> str:
+        """Returns CPU and Memory usage."""
+        try:
+            import psutil
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+
+            return f"CPU Usage: {cpu_percent}%\nMemory Usage: {memory.percent}% (Used: {memory.used // (1024*1024)}MB / Total: {memory.total // (1024*1024)}MB)"
+        except ImportError:
+            return "Error: psutil not installed. Run `pip install psutil` to get resource usage."
+        except Exception as e:
+            return f"Error getting resource usage: {e}"
+
+    @staticmethod
+    def get_disk_usage(path: str = ".") -> str:
+        """Returns disk usage for the specified path."""
+        import shutil
+
+        try:
+            total, used, free = shutil.disk_usage(path)
+
+            # Convert to GB
+            total_gb = total // (2**30)
+            used_gb = used // (2**30)
+            free_gb = free // (2**30)
+            percent = (used / total) * 100
+
+            return f"Disk Usage ({path}):\n  Total: {total_gb} GB\n  Used: {used_gb} GB ({percent:.1f}%)\n  Free: {free_gb} GB"
+        except Exception as e:
+            return f"Error getting disk usage: {e}"
+
+
+class ConversionToolbox:
+    """Tools for converting between different data formats."""
+
+    @staticmethod
+    def json_to_yaml(json_str: str) -> str:
+        """Converts JSON string to YAML."""
+        try:
+            import json
+            import yaml
+
+            data = json.loads(json_str)
+            return yaml.dump(data, default_flow_style=False)
+        except ImportError:
+            return "Error: PyYAML not installed. Run `pip install PyYAML`."
+        except json.JSONDecodeError as e:
+            return f"Error decoding JSON: {e}"
+        except Exception as e:
+            return f"Error converting to YAML: {e}"
+
+    @staticmethod
+    def yaml_to_json(yaml_str: str) -> str:
+        """Converts YAML string to JSON."""
+        try:
+            import json
+            import yaml
+
+            data = yaml.safe_load(yaml_str)
+            return json.dumps(data, indent=2)
+        except ImportError:
+            return "Error: PyYAML not installed. Run `pip install PyYAML`."
+        except Exception as e:
+            return f"Error converting to JSON: {e}"
+
+    @staticmethod
+    def csv_to_json(csv_path: str) -> str:
+        """Converts a CSV file to a JSON string."""
+        import csv
+        import json
+        import os
+
+        try:
+            if not os.path.exists(csv_path):
+                return f"Error: File not found: {csv_path}"
+
+            data = []
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    data.append(row)
+
+            return json.dumps(data, indent=2)
+        except Exception as e:
+            return f"Error converting CSV to JSON: {e}"
