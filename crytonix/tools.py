@@ -2585,3 +2585,442 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class HealthToolbox:
+    """Tools for developer health and wellness."""
+
+    @staticmethod
+    def check_posture() -> str:
+        """Reminds the user to check their posture."""
+        return "🧘 Posture Check: Sit up straight, shoulders back, feet flat on the floor. Take a deep breath!"
+
+    @staticmethod
+    def hydration_reminder() -> str:
+        """Reminds the user to drink water."""
+        return "💧 Hydration Check: Have you had a glass of water recently? Your brain needs it to code!"
+
+class NetworkToolbox:
+    """Tools for network diagnostics."""
+
+    @staticmethod
+    def ping(host: str) -> str:
+        """Pings a host to check connectivity."""
+        import subprocess
+        import platform
+
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, '4', host]
+
+        try:
+            res = subprocess.run(command, capture_output=True, text=True, timeout=10)
+            if res.returncode == 0:
+                return f"✅ Ping successful to {host}:\n{res.stdout}"
+            return f"❌ Ping failed to {host}:\n{res.stderr}"
+        except subprocess.TimeoutExpired:
+            return f"⏱️ Ping timed out for {host}"
+        except Exception as e:
+            return f"Error pinging {host}: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int) -> str:
+        """Checks if a TCP port is open."""
+        import socket
+
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(3)
+        try:
+            result = sock.connect_ex((host, port))
+            if result == 0:
+                return f"✅ Port {port} on {host} is OPEN."
+            else:
+                return f"❌ Port {port} on {host} is CLOSED."
+        except Exception as e:
+            return f"Error checking port: {e}"
+        finally:
+            sock.close()
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        """Performs a DNS lookup for a domain."""
+        import socket
+
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"🌐 DNS Lookup for {domain}: {ip}"
+        except Exception as e:
+            return f"Error resolving {domain}: {e}"
+
+class ArchiveToolbox:
+    """Tools for file archiving and compression."""
+
+    @staticmethod
+    def zip_files(output_path: str, files: List[str]) -> str:
+        """Compresses a list of files into a zip archive."""
+        import zipfile
+
+        try:
+            with zipfile.ZipFile(output_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for file in files:
+                    if os.path.exists(file):
+                        if os.path.isdir(file):
+                            for root, _, filenames in os.walk(file):
+                                for filename in filenames:
+                                    filepath = os.path.join(root, filename)
+                                    arcname = os.path.relpath(filepath, os.path.dirname(file))
+                                    zipf.write(filepath, arcname)
+                        else:
+                            zipf.write(file, os.path.basename(file))
+                    else:
+                        return f"Error: File not found: {file}"
+            return f"✅ Successfully created archive: {output_path}"
+        except Exception as e:
+            return f"Error creating zip: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str) -> str:
+        """Extracts a zip archive."""
+        import zipfile
+
+        try:
+            if not os.path.exists(zip_path):
+                return f"Error: Zip file not found: {zip_path}"
+
+            os.makedirs(extract_to, exist_ok=True)
+
+            with zipfile.ZipFile(zip_path, 'r') as zipf:
+                # Basic Zip Slip protection
+                for member in zipf.namelist():
+                    abs_path = os.path.abspath(os.path.join(extract_to, member))
+                    if not abs_path.startswith(os.path.abspath(extract_to)):
+                        return f"Security Error: Zip Slip attempt detected for {member}"
+
+                zipf.extractall(extract_to)
+            return f"✅ Successfully extracted to: {extract_to}"
+        except Exception as e:
+            return f"Error extracting zip: {e}"
+
+class CryptoToolbox:
+    """Tools for cryptography and hashing."""
+
+    @staticmethod
+    def generate_hash(text: str, algorithm: str = "sha256") -> str:
+        """Generates a hash for the given text."""
+        import hashlib
+
+        try:
+            if not hasattr(hashlib, algorithm):
+                return f"Error: Algorithm '{algorithm}' not supported."
+
+            h = getattr(hashlib, algorithm)()
+            h.update(text.encode('utf-8'))
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def generate_file_hash(filepath: str, algorithm: str = "sha256") -> str:
+        """Generates a hash for a file."""
+        import hashlib
+
+        try:
+            if not os.path.exists(filepath):
+                return f"Error: File not found: {filepath}"
+
+            if not hasattr(hashlib, algorithm):
+                return f"Error: Algorithm '{algorithm}' not supported."
+
+            h = getattr(hashlib, algorithm)()
+            with open(filepath, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error generating file hash: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        """Encodes text to Base64."""
+        import base64
+        try:
+            return base64.b64encode(text.encode('utf-8')).decode('utf-8')
+        except Exception as e:
+            return f"Error encoding: {e}"
+
+    @staticmethod
+    def base64_decode(text: str) -> str:
+        """Decodes Base64 text."""
+        import base64
+        try:
+            return base64.b64decode(text.encode('utf-8')).decode('utf-8')
+        except Exception as e:
+            return f"Error decoding: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        """Generates a random UUID."""
+        import uuid
+        return str(uuid.uuid4())
+
+class LocalizationToolbox:
+    """Tools for internationalization and localization."""
+
+    @staticmethod
+    def find_hardcoded_strings(path: str) -> str:
+        """Finds potential hardcoded strings in Python files."""
+        import ast
+
+        findings = []
+        try:
+            for root, _, files in os.walk(path):
+                if ".git" in root or "venv" in root: continue
+                for file in files:
+                    if file.endswith('.py'):
+                        file_path = os.path.join(root, file)
+                        try:
+                            with open(file_path, 'r', encoding='utf-8') as f:
+                                tree = ast.parse(f.read())
+
+                            for node in ast.walk(tree):
+                                if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                                    # Basic heuristic: ignore short strings and dict keys might be hard
+                                    if len(node.value) > 5 and ' ' in node.value:
+                                        findings.append(f"{file_path}:{node.lineno}: \"{node.value}\"")
+                                elif isinstance(node, ast.Str): # Python < 3.8
+                                    if len(node.s) > 5 and ' ' in node.s:
+                                        findings.append(f"{file_path}:{node.lineno}: \"{node.s}\"")
+                        except:
+                            pass
+
+            return "\n".join(findings) if findings else "No hardcoded strings detected."
+        except Exception as e:
+            return f"Error searching strings: {e}"
+
+    @staticmethod
+    def verify_keys_sync(json_files: List[str]) -> str:
+        """Verifies that all JSON localization files have the same keys."""
+        try:
+            keys_sets = {}
+            for fpath in json_files:
+                with open(fpath, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+
+                    def get_keys(d, prefix=""):
+                        keys = []
+                        for k, v in d.items():
+                            full_key = f"{prefix}.{k}" if prefix else k
+                            keys.append(full_key)
+                            if isinstance(v, dict):
+                                keys.extend(get_keys(v, full_key))
+                        return keys
+
+                    keys_sets[fpath] = set(get_keys(data))
+
+            # Compare
+            base_file = json_files[0]
+            base_keys = keys_sets[base_file]
+            issues = []
+
+            for fpath in json_files[1:]:
+                comp_keys = keys_sets[fpath]
+                missing = base_keys - comp_keys
+                extra = comp_keys - base_keys
+
+                if missing:
+                    issues.append(f"❌ {fpath} is missing keys: {', '.join(missing)}")
+                if extra:
+                    issues.append(f"⚠️ {fpath} has extra keys: {', '.join(extra)}")
+
+            return "\n".join(issues) if issues else "✅ All files are in sync."
+        except Exception as e:
+            return f"Error verifying keys: {e}"
+
+class SystemInfoToolbox:
+    """Tools for retrieving system information."""
+
+    @staticmethod
+    def get_system_info() -> str:
+        """Returns basic system information."""
+        import platform
+        try:
+            info = [
+                f"OS: {platform.system()} {platform.release()}",
+                f"Version: {platform.version()}",
+                f"Architecture: {platform.machine()}",
+                f"Processor: {platform.processor()}",
+                f"Python: {platform.python_version()}"
+            ]
+            return "\n".join(info)
+        except Exception as e:
+            return f"Error getting system info: {e}"
+
+    @staticmethod
+    def get_resource_usage() -> str:
+        """Returns CPU and Memory usage (requires psutil)."""
+        try:
+            import psutil
+            mem = psutil.virtual_memory()
+            cpu = psutil.cpu_percent(interval=1)
+
+            return f"""CPU Usage: {cpu}%
+Memory Total: {mem.total / (1024**3):.2f} GB
+Memory Available: {mem.available / (1024**3):.2f} GB
+Memory Used: {mem.percent}%"""
+        except ImportError:
+            return "Error: psutil not installed. Run `pip install psutil`."
+        except Exception as e:
+            return f"Error getting resources: {e}"
+
+    @staticmethod
+    def get_disk_usage(path: str = "/") -> str:
+        """Returns disk usage for a path."""
+        import shutil
+        try:
+            total, used, free = shutil.disk_usage(path)
+            return f"""Disk Usage ({path}):
+  Total: {total / (1024**3):.2f} GB
+  Used: {used / (1024**3):.2f} GB
+  Free: {free / (1024**3):.2f} GB"""
+        except Exception as e:
+            return f"Error getting disk usage: {e}"
+
+class PDFToolbox:
+    """Tools for PDF manipulation."""
+
+    @staticmethod
+    def extract_text(pdf_path: str) -> str:
+        """Extracts text from a PDF file."""
+        try:
+            from pypdf import PdfReader
+        except ImportError:
+            return "Error: pypdf not installed. Run `pip install pypdf`."
+
+        try:
+            reader = PdfReader(pdf_path)
+            text = ""
+            for page in reader.pages:
+                extracted = page.extract_text()
+                if extracted:
+                    text += extracted + "\n"
+            return text
+        except Exception as e:
+            return f"Error extracting text: {e}"
+
+    @staticmethod
+    def create_pdf(text: str, output_path: str) -> str:
+        """Creates a simple PDF with text."""
+        try:
+            from reportlab.pdfgen import canvas
+            from reportlab.lib.pagesizes import letter
+        except ImportError:
+            return "Error: reportlab not installed. Run `pip install reportlab`."
+
+        try:
+            c = canvas.Canvas(output_path, pagesize=letter)
+            width, height = letter
+            y = height - 40
+
+            for line in text.split('\n'):
+                if y < 40:
+                    c.showPage()
+                    y = height - 40
+                c.drawString(40, y, line)
+                y -= 14
+
+            c.save()
+            return f"✅ Created PDF: {output_path}"
+        except Exception as e:
+            return f"Error creating PDF: {e}"
+
+class AudioToolbox:
+    """Tools for audio processing."""
+
+    @staticmethod
+    def text_to_speech(text: str, output_file: str) -> str:
+        """Converts text to speech and saves to file."""
+        try:
+            import pyttsx3
+        except ImportError:
+            return "Error: pyttsx3 not installed. Run `pip install pyttsx3`."
+
+        try:
+            engine = pyttsx3.init()
+            engine.save_to_file(text, output_file)
+            engine.runAndWait()
+            return f"✅ Saved audio to: {output_file}"
+        except Exception as e:
+            return f"Error converting text to speech: {e}"
+
+    @staticmethod
+    def get_audio_metadata(file_path: str) -> str:
+        """Retrieves metadata from an audio file."""
+        try:
+            import mutagen
+        except ImportError:
+            return "Error: mutagen not installed. Run `pip install mutagen`."
+
+        try:
+            audio = mutagen.File(file_path)
+            if audio:
+                return str(audio)
+            return "No metadata found."
+        except Exception as e:
+            return f"Error getting metadata: {e}"
+
+class ConversionToolbox:
+    """Tools for file format conversion."""
+
+    @staticmethod
+    def json_to_yaml(json_file: str, yaml_file: str) -> str:
+        """Converts JSON file to YAML."""
+        try:
+            import yaml
+        except ImportError:
+            return "Error: PyYAML not installed. Run `pip install PyYAML`."
+
+        try:
+            with open(json_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+
+            with open(yaml_file, 'w', encoding='utf-8') as f:
+                yaml.dump(data, f, default_flow_style=False)
+
+            return f"✅ Converted {json_file} to {yaml_file}"
+        except Exception as e:
+            return f"Error converting JSON to YAML: {e}"
+
+    @staticmethod
+    def yaml_to_json(yaml_file: str, json_file: str) -> str:
+        """Converts YAML file to JSON."""
+        try:
+            import yaml
+        except ImportError:
+            return "Error: PyYAML not installed. Run `pip install PyYAML`."
+
+        try:
+            with open(yaml_file, 'r', encoding='utf-8') as f:
+                data = yaml.safe_load(f)
+
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+
+            return f"✅ Converted {yaml_file} to {json_file}"
+        except Exception as e:
+            return f"Error converting YAML to JSON: {e}"
+
+    @staticmethod
+    def csv_to_json(csv_file: str, json_file: str) -> str:
+        """Converts CSV file to JSON."""
+        import csv
+        try:
+            data = []
+            with open(csv_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    data.append(row)
+
+            with open(json_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, indent=2)
+
+            return f"✅ Converted {csv_file} to {json_file}"
+        except Exception as e:
+            return f"Error converting CSV to JSON: {e}"
