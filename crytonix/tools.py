@@ -2585,3 +2585,161 @@ class DependencyToolbox:
             return f"Error analyzing dependencies: {e}"
 
 
+
+class NetworkToolbox:
+    @staticmethod
+    def ping(host: str) -> str:
+        import platform
+        import subprocess
+        param = '-n' if platform.system().lower() == 'windows' else '-c'
+        command = ['ping', param, '4', host]
+        try:
+            output = subprocess.run(command, capture_output=True, text=True, timeout=10)
+            return output.stdout
+        except Exception as e:
+            return f"Ping failed: {e}"
+
+    @staticmethod
+    def check_port(host: str, port: int) -> str:
+        import socket
+        try:
+            with socket.create_connection((host, port), timeout=5):
+                return f"Port {port} on {host} is OPEN."
+        except:
+            return f"Port {port} on {host} is CLOSED or unreachable."
+
+    @staticmethod
+    def dns_lookup(domain: str) -> str:
+        import socket
+        try:
+            ip = socket.gethostbyname(domain)
+            return f"DNS Lookup: {domain} -> {ip}"
+        except Exception as e:
+            return f"DNS Lookup failed: {e}"
+
+class ArchiveToolbox:
+    @staticmethod
+    def zip_files(source_dir: str, output_zip: str) -> str:
+        import zipfile
+        import os
+        try:
+            with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                for root, _, files in os.walk(source_dir):
+                    for file in files:
+                        file_path = os.path.join(root, file)
+                        arcname = os.path.relpath(file_path, source_dir)
+                        zipf.write(file_path, arcname)
+            return f"Successfully zipped {source_dir} to {output_zip}"
+        except Exception as e:
+            return f"Error zipping files: {e}"
+
+    @staticmethod
+    def unzip_file(zip_path: str, extract_to: str) -> str:
+        import zipfile
+        try:
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(extract_to)
+            return f"Successfully extracted {zip_path} to {extract_to}"
+        except Exception as e:
+            return f"Error unzipping file: {e}"
+
+class CryptoToolbox:
+    @staticmethod
+    def generate_hash(text: str, alg: str = "sha256") -> str:
+        import hashlib
+        try:
+            h = hashlib.new(alg)
+            h.update(text.encode())
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error generating hash: {e}"
+
+    @staticmethod
+    def generate_file_hash(filepath: str, alg: str = "sha256") -> str:
+        import hashlib
+        try:
+            h = hashlib.new(alg)
+            with open(filepath, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+            return h.hexdigest()
+        except Exception as e:
+            return f"Error generating file hash: {e}"
+
+    @staticmethod
+    def base64_encode(text: str) -> str:
+        import base64
+        return base64.b64encode(text.encode()).decode()
+
+    @staticmethod
+    def base64_decode(text: str) -> str:
+        import base64
+        try:
+            return base64.b64decode(text).decode()
+        except Exception as e:
+            return f"Error decoding base64: {e}"
+
+    @staticmethod
+    def generate_uuid() -> str:
+        import uuid
+        return str(uuid.uuid4())
+
+class SystemInfoToolbox:
+    @staticmethod
+    def get_system_info() -> str:
+        import platform
+        import sys
+        return f"System: {platform.system()} {platform.release()}\nPython: {sys.version}"
+
+    @staticmethod
+    def get_disk_usage(path: str = ".") -> str:
+        import shutil
+        total, used, free = shutil.disk_usage(path)
+        return f"Disk Usage ({path}):\nTotal: {total // (2**30)} GB\nUsed: {used // (2**30)} GB\nFree: {free // (2**30)} GB"
+
+    @staticmethod
+    def get_resource_usage() -> str:
+        try:
+            import psutil
+            cpu = psutil.cpu_percent(interval=1)
+            memory = psutil.virtual_memory()
+            return f"CPU Usage: {cpu}%\nMemory Usage: {memory.percent}% (Used: {memory.used // (2**20)} MB, Available: {memory.available // (2**20)} MB)"
+        except ImportError:
+            return "Error: psutil not installed. Run `pip install psutil`."
+
+class ConversionToolbox:
+    @staticmethod
+    def json_to_yaml(json_str: str) -> str:
+        import json
+        try:
+            import yaml
+            data = json.loads(json_str)
+            return yaml.dump(data, default_flow_style=False)
+        except ImportError:
+            return "Error: PyYAML not installed. Run `pip install PyYAML`."
+        except Exception as e:
+            return f"Error converting JSON to YAML: {e}"
+
+    @staticmethod
+    def yaml_to_json(yaml_str: str) -> str:
+        import json
+        try:
+            import yaml
+            data = yaml.safe_load(yaml_str)
+            return json.dumps(data, indent=2)
+        except ImportError:
+            return "Error: PyYAML not installed. Run `pip install PyYAML`."
+        except Exception as e:
+            return f"Error converting YAML to JSON: {e}"
+
+    @staticmethod
+    def csv_to_json(csv_path: str) -> str:
+        import csv
+        import json
+        try:
+            with open(csv_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                rows = list(reader)
+            return json.dumps(rows, indent=2)
+        except Exception as e:
+            return f"Error converting CSV to JSON: {e}"
